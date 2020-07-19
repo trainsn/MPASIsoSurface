@@ -29,7 +29,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void renderQuad();
 
 const bool dump_buffer = true;
-const bool train = true;
 float isoValue = 20.0f;
 const int nSample = 10;
 
@@ -401,7 +400,8 @@ int main(int argc, char **argv)
 {
 	char input_name[1024];
 	sprintf(input_name, argv[1]);
-	
+	bool train = (bool)(argv[2][0] - '0');
+    
 	string input_name_s = input_name;
 	int pos_last_dot = input_name_s.rfind(".");
 	int pos_last_dash = input_name_s.rfind("_");
@@ -417,14 +417,14 @@ int main(int argc, char **argv)
 
     //save filename 
 	if (train)
-		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/h5Names.txt", "w");
+		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/h5Names.txt", "a");
 	else 
-		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/h5Names.txt", "w");
+		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/h5Names.txt", "a");
 
 	if (train)
-		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/imageNames.txt", "w");
+		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/imageNames.txt", "a");
 	else 
-		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/imageNames.txt", "w");
+		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/imageNames.txt", "a");
 
 	// glfw: initialize and configure
 	// ------------------------------
@@ -704,10 +704,10 @@ int main(int argc, char **argv)
 		if (dump_buffer) {
 			char filepath[1024];
 			if (train)
-			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%s", filename);
+			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/%s", simIdx, filename);
 			else 
-			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%s", filename);
-			fprintf(h5Names, "%s\n", filename);
+			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/%s", simIdx, filename);
+			fprintf(h5Names, "%04d/%s\n", simIdx, filename);
 			    
 			hid_t file, space3, space1, dset_position, dset_normal, dset_mask, dset_depth;
 			herr_t status;
@@ -841,9 +841,9 @@ int main(int argc, char **argv)
 		strcat(imagename, ".png");
 		char imagepath[1024];
 		if (train)
-		    sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%s", imagename);
+		    sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/%s", simIdx, imagename);
 		else 
-			sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%s", imagename);
+			sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/%s", simIdx, imagename);
 		
 		float* pBuffer = new float[SCR_WIDTH * SCR_HEIGHT * 4];
 		unsigned char* pImage = new unsigned char[SCR_WIDTH * SCR_HEIGHT * 3];
@@ -858,7 +858,7 @@ int main(int argc, char **argv)
 			}
 		}
 		stbi_write_png(imagepath, SCR_WIDTH, SCR_HEIGHT, 3, pImage, SCR_WIDTH * 3);
-		fprintf(imageNames, "%s\n", imagename);
+		fprintf(imageNames, "%04d/%s\n", simIdx, imagename);
 
 		delete pBuffer;
 		delete pImage;

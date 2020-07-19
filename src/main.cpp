@@ -29,7 +29,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void renderQuad();
 
 const bool dump_buffer = true;
-float isoValue = 21.0f;
+float isoValue = 25.0f;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -79,6 +79,25 @@ glm::vec3 eye;
 
 glm::mat4 view;
 glm::mat4 model;
+
+// Lighting power.
+float lighting_power = 2;
+
+// lighting parameters 
+// Use lighting?
+int use_lighting = 1;
+
+// Render different buffers.
+int show_depth = 0;
+int show_normals = 0;
+int show_position = 0;
+
+// Used to orbit the point lights.
+float point_light_theta = M_PI / 2;
+float point_light_phi = M_PI / 2;
+
+float point_light_theta1 = 1.57;
+float point_light_phi1 = 1.57;
 
 unsigned int vao[1];
 unsigned int gbo[2];
@@ -727,6 +746,50 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, gMask);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, gDepth);
+
+		// set lighting sources 
+		// Let the fragment shader know that perspective projection is being used.
+		if (perspective_projection) {
+			shaderLightingPass.setInt("uPerspectiveProjection", 1);
+		}
+		else {
+			shaderLightingPass.setInt("uPerspectiveProjection", 0);
+		}
+
+		shaderLightingPass.setInt("uShowDepth", show_depth);
+		shaderLightingPass.setInt("uShowNormals", show_normals);
+		shaderLightingPass.setInt("uShowPosition", show_position);
+		setMatrixUniforms(shaderLightingPass);
+
+		// Disable alpha blending.
+		glDisable(GL_BLEND);
+		if (use_lighting == 1) {
+			// Pass the lighting parameters to the fragment shader.
+			// Global ambient color. 
+			shaderLightingPass.setVec3("uAmbientColor", base_color);
+
+			// Point light 1.
+			float point_light_position_x = 0 + 13.5 * cos(point_light_theta) * sin(point_light_phi);
+			float point_light_position_y = 0 + 13.5 * sin(point_light_theta) * sin(point_light_phi);
+			float point_light_position_z = 0 + 13.5 * cos(point_light_phi);
+			glm::vec4 light_pos(point_light_position_x, point_light_position_y, point_light_position_z, 1.0);
+			light_pos = view * light_pos;
+
+			shaderLightingPass.setVec3("uPointLightingColor", lighting_power, lighting_power, lighting_power);
+			shaderLightingPass.setVec3("uPointLightingLocation", light_pos[0], light_pos[1], light_pos[2]);
+
+			// Point light 2.
+			/*float point_light_position_x1 = 0 + 8.0 * cos(point_light_theta1) * sin(point_light_phi1);
+			float point_light_position_y1 = 0 + 8.0 * sin(point_light_theta1) * sin(point_light_phi1);
+			float point_light_position_z1 = 0 + 8.0 * cos(point_light_phi1);
+
+			shaderLightingPass.setVec3("uPointLightingColor1", lighting_power, lighting_power, lighting_power);
+			shaderLightingPass.setVec3("uPointLightingLocation1", point_light_position_x1, point_light_position_y1, point_light_position_z1);*/
+		}
+
+		shaderLightingPass.setInt("uUseLighting", use_lighting);
 
 		// finally render quad
 		renderQuad();

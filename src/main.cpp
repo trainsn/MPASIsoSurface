@@ -29,7 +29,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void renderQuad();
 
 const bool dump_buffer = true;
-float isoValue = 25.0f;
+const bool train = true;
+float isoValue = 20.0f;
+const int nSample = 10;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -395,9 +397,34 @@ void setMatrixUniforms(Shader ourShader) {
 	return;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-	loadMeshFromNetCDF("/fs/project/PAS0027/MPAS/Results/0000_3.27890.nc");
+	char input_name[1024];
+	sprintf(input_name, argv[1]);
+	
+	string input_name_s = input_name;
+	int pos_last_dot = input_name_s.rfind(".");
+	int pos_last_dash = input_name_s.rfind("_");
+	int simIdx = stoi(input_name_s.substr(0, pos_last_dash));
+	float BwsA = stof(input_name_s.substr(pos_last_dash + 1, pos_last_dot - pos_last_dash - 1));
+
+	char input_path[1024];
+	sprintf(input_path, "/fs/project/PAS0027/MPAS/Results/%s", input_name);
+ 	loadMeshFromNetCDF(input_path);
+	
+	FILE *h5Names = NULL;
+	FILE *imageNames = NULL;
+
+    //save filename 
+	if (train)
+		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/h5Names.txt", "w");
+	else 
+		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/h5Names.txt", "w");
+
+	if (train)
+		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/imageNames.txt", "w");
+	else 
+		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/imageNames.txt", "w");
 
 	// glfw: initialize and configure
 	// ------------------------------
@@ -513,6 +540,7 @@ int main()
 	// render loop
 	// -----------
 	//while (!glfwWindowShouldClose(window))
+	for (int  i=0; i < nSample; i++)
 	{
 		float time_now = glfwGetTime();
 		if (time_last != 0) {
@@ -577,13 +605,12 @@ int main()
 		mvMatrix = glm::mat4(1.0f);
 
 		// transform
-		theta = M_PI;
-		phi = 0;
-		//direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
-		//up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-		direction = glm::vec3(0.0f, dist, 0.0f);
-	   	//direction = glm::vec3(xVertex[0] / max_rho * dist, yVertex[0] / max_rho * dist, zVertex[0] / max_rho * dist);
-		up = glm::vec3(0.0f, 0.0f, 1.0f);
+		//theta = M_PI / 2;
+		//phi = M_PI / 2;
+		theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
+		phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
+		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
 		center = glm::vec3(0.0f, 0.0f, 0.0f);
 		eye = center + direction;
 
@@ -592,6 +619,8 @@ int main()
 		//model *= glm::rotate(rotation_radians, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		mvMatrix = view * model;
+		
+		isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
 
 		// render
 		// ------
@@ -670,10 +699,16 @@ int main()
 		glDrawArrays(GL_POINTS, 0, nVertices * (nVertLevels - 1));
 		//glDrawArrays(GL_POINTS, 0, 1);
 
+		char filename[1024];
+	    sprintf(filename, "MPAS_%06d_%.5f_%.6f_%.10f_%.10f.h5", simIdx * nSample + i, BwsA, isoValue, theta * 180 / M_PI, phi * 180 / M_PI);
 		if (dump_buffer) {
 			char filepath[1024];
-			sprintf(filepath, "res.h5");
-
+			if (train)
+			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%s", filename);
+			else 
+			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%s", filename);
+			fprintf(h5Names, "%s\n", filename);
+			    
 			hid_t file, space3, space1, dset_position, dset_normal, dset_mask, dset_depth;
 			herr_t status;
 			hsize_t dims3[1] = { SCR_WIDTH * SCR_HEIGHT * 3 };
@@ -774,7 +809,11 @@ int main()
 			float point_light_position_x = 0 + 13.5 * cos(point_light_theta) * sin(point_light_phi);
 			float point_light_position_y = 0 + 13.5 * sin(point_light_theta) * sin(point_light_phi);
 			float point_light_position_z = 0 + 13.5 * cos(point_light_phi);
-			glm::vec4 light_pos(point_light_position_x, point_light_position_y, point_light_position_z, 1.0);
+			
+			float point_light_dist = 13.5;
+			glm::vec3 point_light_direction = direction / dist * point_light_dist;
+			glm::vec3 point_light_position = center + point_light_direction;
+			glm::vec4 light_pos(point_light_position.x, point_light_position.y, point_light_position.z, 1.0);
 			light_pos = view * light_pos;
 
 			shaderLightingPass.setVec3("uPointLightingColor", lighting_power, lighting_power, lighting_power);
@@ -793,10 +832,19 @@ int main()
 
 		// finally render quad
 		renderQuad();
-
+		
 		//stbi_flip_vertically_on_write(1);
+		string filename_s = filename;
+		int pos_last_dot = filename_s.rfind(".");
+		char imagename[1024];
+		strcpy(imagename, filename_s.substr(0, pos_last_dot).c_str());
+		strcat(imagename, ".png");
 		char imagepath[1024];
-		sprintf(imagepath, "res.png");
+		if (train)
+		    sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%s", imagename);
+		else 
+			sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%s", imagename);
+		
 		float* pBuffer = new float[SCR_WIDTH * SCR_HEIGHT * 4];
 		unsigned char* pImage = new unsigned char[SCR_WIDTH * SCR_HEIGHT * 3];
 		glReadBuffer(GL_BACK);
@@ -810,6 +858,8 @@ int main()
 			}
 		}
 		stbi_write_png(imagepath, SCR_WIDTH, SCR_HEIGHT, 3, pImage, SCR_WIDTH * 3);
+		fprintf(imageNames, "%s\n", imagename);
+
 		delete pBuffer;
 		delete pImage;
 

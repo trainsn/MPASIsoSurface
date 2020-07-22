@@ -2,6 +2,7 @@
 isosurface renderer by ray casting for MPAS geodesic cells 
 
 The way to run it on OSC:
+
 First, load the library needed.
 ``` 
 module load intel/16.0.3
@@ -17,6 +18,6 @@ Then, complile the source code and run it.
 cd build 
 cmake ..
 make 
-./MPASVis raw_simulation_file_path {0,1}(trainingtesting data)
+./MPASVis raw_simulation_file_path {0,1}(training or testing data)
 ``` 
 

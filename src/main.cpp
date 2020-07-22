@@ -30,7 +30,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 10;
+const int nSample = 1000;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -400,6 +400,7 @@ int main(int argc, char **argv)
 {
 	char input_name[1024];
 	sprintf(input_name, argv[1]);
+	fprintf(stderr, "%s\n", argv[1]);
 	bool train = (bool)(argv[2][0] - '0');
     
 	string input_name_s = input_name;

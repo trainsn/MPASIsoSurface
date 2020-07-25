@@ -17,6 +17,7 @@ uniform int uPerspectiveProjection;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
+uniform mat4 uInvPMatrix;
 uniform mat3 uNMatrix;
 
 uniform vec3 uAmbientColor;
@@ -25,13 +26,27 @@ uniform vec3 uPointLightingColor;
 uniform vec3 uPointLightingLocation1;
 uniform vec3 uPointLightingColor1;
 
+vec3 ViewPosFromDepth(float depth){
+	float z = depth * 2.0 - 1.0;
+
+	vec4 clipSpacePosition = vec4(TexCoords * 2.0 - 1.0, z, 1.0);
+	vec4 viewSpacePosition = uInvPMatrix * clipSpacePosition;
+
+	// Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+	return viewSpacePosition.xyz;
+}
+
 void main()
 {
 	// backgroundColor
     vec4 bgColor = vec4(1.0, 1.0, 1.0, 0.0);
 
 	// retrive data from gbuffer
-	vec3 vPosition = (uMVMatrix * vec4( texture(gPosition, TexCoords).rgb, 1.0 )).xyz;
+	//vec3 vPosition = (uMVMatrix * vec4( texture(gPosition, TexCoords).rgb, 1.0 )).xyz;
+	float depth = texture(gDepth, TexCoords).r;
+	vec3 vPosition = ViewPosFromDepth(depth);
 	vec3 vTransformedNormal = texture(gNormal, TexCoords).rgb;
 	vec4 vDiffuseColor = texture(gDiffuseColor, TexCoords).rgba;
 

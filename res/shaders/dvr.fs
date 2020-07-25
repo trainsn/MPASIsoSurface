@@ -505,8 +505,8 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout vec3 vtxNormals[3]) {
 	}
 }
 
-float near = 0.1;
-float far = 5.0;
+float near = 1.79;
+float far = 2.81;
 
 float LinearizeDepth(float depth) 
 {
@@ -610,7 +610,7 @@ void main(){
 				vec4 posProjSpace = uPMatrix * uMVMatrix * vec4(position, 1.0);
 				gDepth = posProjSpace.z /posProjSpace.w;
 				gDepth = gDepth * 0.5 + 0.5;
-				gDepth = LinearizeDepth(gDepth) / far;
+				//gDepth = LinearizeDepth(gDepth) / far;
 				
 				hasIsosurface = true;
 			} 

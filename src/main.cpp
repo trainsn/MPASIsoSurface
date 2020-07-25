@@ -30,7 +30,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 1000;
+const int nSample = 10;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -63,6 +63,7 @@ float rotation_radians_step = 0.3 * 180 / M_PI;
 
 glm::mat4 pMatrix;
 glm::mat4 mvMatrix;
+glm::mat4 inv_pMatrix;
 glm::mat4 inv_mvMatrix;
 glm::mat3 normalMatrix;
 
@@ -71,7 +72,7 @@ bool perspective_projection = true;
 
 // Information related to the camera 
 //float dist = 0.6;
-float dist = 2.5;
+float dist = 2.3;
 float theta, phi;
 glm::vec3 direction;
 glm::vec3 up;
@@ -390,6 +391,10 @@ void setMatrixUniforms(Shader ourShader) {
 	// Pass the vertex normal matrix to the shader so it can compute the lighting calculations.
 	normalMatrix = glm::transpose(glm::inverse(glm::mat3(mvMatrix)));
 	ourShader.setMat3("uNMatrix", normalMatrix);
+	
+	// inverse of projection matrix 
+	inv_pMatrix = glm::inverse(pMatrix);
+	ourShader.setMat4("uInvPMatrix", inv_pMatrix);
 
 	inv_mvMatrix = glm::inverse(mvMatrix);
 	ourShader.setMat4("uInvMVMatrix", inv_mvMatrix);
@@ -556,8 +561,8 @@ int main(int argc, char **argv)
 		time_last = time_now;
 
 		// create the projection matrix 
-		float near = 0.1f;
-		float far = 5.0f;
+		float near = 1.79f;
+		float far = 2.81f;
 		float fov_r = 30.0f / 180.0f * M_PI;
 
 		if (perspective_projection) {
@@ -773,6 +778,7 @@ int main(int argc, char **argv)
 		shaderLightingPass.setInt("gNormal", 1);
 		shaderLightingPass.setInt("gDiffuseColor", 2);
 		shaderLightingPass.setInt("gMask", 3);
+		shaderLightingPass.setInt("gDepth", 4);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, gPosition);

@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #define _USE_MATH_DEFINES
 
+#define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -30,7 +31,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 10;
+const int nSample = 1000;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -613,21 +614,36 @@ int main(int argc, char **argv)
 		// transform
 		//theta = M_PI / 2;
 		//phi = M_PI / 2;
-		theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
-		phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
-		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
-		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-		center = glm::vec3(0.0f, 0.0f, 0.0f);
+		if (!(i % 2)){
+		    theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
+    		phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+    		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
+    		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
+    		isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
+		}
+		else {
+		    float up_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+        	glm::vec4 up_adjust_axis = glm::vec4(up, 1.0f) * glm::rotate(up_adjust_angle, direction);
+        	float direction_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI * 2 / 9;
+        	glm::vec4 direction_new = glm::vec4(direction, 1.0f) * glm::rotate(direction_adjust_angle, up_adjust_axis.xyz());
+        	direction = direction_new.xyz();
+        	theta = acos(direction.z / dist);
+	        phi = atan(direction.y / direction.x);
+	        if (phi < 0)
+	            phi += M_PI;
+	        if (direction.y < 0)
+	            phi += M_PI;
+		}
+		
+        center = glm::vec3(0.0f, 0.0f, 0.0f);
 		eye = center + direction;
-
+		
 		view = glm::lookAt(eye, center, up);
 		model = glm::mat4(1.0f);
 		//model *= glm::rotate(rotation_radians, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		mvMatrix = view * model;
-		
-		isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
-
+	
 		// render
 		// ------
 		// 1. Geometry pass: render scene's geometry/color data into gbuffer

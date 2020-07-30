@@ -65,7 +65,7 @@ struct Ray{
 };
 
 struct HitRec{
-	float t;	//  t value along the hitted face 
+	double t;	//  t value along the hitted face 
 	int hitFaceid;	// hitted face id 
 	int nextlayerId;
 };
@@ -73,8 +73,8 @@ struct HitRec{
 struct MPASPrism {
 	uint m_prismId;
 	int m_iLayer;
-	vec3 vtxCoordTop[3]; // 3 top vertex coordinates
-	vec3 vtxCoordBottom[3]; // 3 botton vertex coordinates 
+	dvec3 vtxCoordTop[3]; // 3 top vertex coordinates
+	dvec3 vtxCoordBottom[3]; // 3 botton vertex coordinates 
 	int m_idxEdge[3];
 	int idxVtx[3]; // triangle vertex index is equvalent to hexagon cell index 
 };
@@ -218,8 +218,8 @@ bool ReloadVtxInfo(in int triangle_id, in int iLayer, inout MPASPrism prism) {
 		int idxCorner = prism.idxVtx[i];	//TRIANGLE_TO_CORNERS_VAR[m_prismId*3+i];
 		lat[i] = texelFetch(CORNERS_LAT_VAR, idxCorner - 1).r;	// CORNERS_LAT_VAR[idxCorner]
 		lon[i] = texelFetch(CORNERS_LON_VAR, idxCorner - 1).r;	// CORNERS_LON_VAR[idxCorner]
-		prism.vtxCoordTop[i] = vec3(maxR*cos(lat[i])*cos(lon[i]), maxR*cos(lat[i])*sin(lon[i]), maxR*sin(lat[i]));
-		prism.vtxCoordBottom[i] = vec3(minR*cos(lat[i])*cos(lon[i]), minR*cos(lat[i])*sin(lon[i]), minR*sin(lat[i]));
+		prism.vtxCoordTop[i] = dvec3(maxR*cos(lat[i])*cos(lon[i]), maxR*cos(lat[i])*sin(lon[i]), maxR*sin(lat[i]));
+		prism.vtxCoordBottom[i] = dvec3(minR*cos(lat[i])*cos(lon[i]), minR*cos(lat[i])*sin(lon[i]), minR*sin(lat[i]));
 	}
 
 	return true; 
@@ -256,8 +256,6 @@ int getAdjacentCellId(inout MPASPrism prism, int faceId) {
 	return nextTriangleIds.x;
 }
 
-#define INTERSECT_DOUBLE_PRECISION
-
 int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	inout HitRec tOutRec, inout int nextCellId) {
 	nextCellId = -1;	// assume no next prism to shot into
@@ -266,7 +264,7 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	tOutRec.hitFaceid = -1; // initialize to tOutRec
 	tOutRec.t = -1.0f;
 	double min_t = FLOAT_MAX, max_t = -1.0f;
-	vec3 vtxCoord[6];
+	dvec3 vtxCoord[6];
 	vtxCoord[0] = prism.vtxCoordTop[0];
 	vtxCoord[1] = prism.vtxCoordTop[1];
 	vtxCoord[2] = prism.vtxCoordTop[2];
@@ -275,11 +273,10 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	vtxCoord[5] = prism.vtxCoordBottom[2];
 
 	for (int idxFace = 0; idxFace < nFaces; idxFace++) {	// 8 faces
-		vec3 v0 = vtxCoord[d_mpas_faceCorners[idxFace * 3]];
-		vec3 v1 = vtxCoord[d_mpas_faceCorners[idxFace * 3 + 1]];
-		vec3 v2 = vtxCoord[d_mpas_faceCorners[idxFace * 3 + 2]];
+		dvec3 v0 = vtxCoord[d_mpas_faceCorners[idxFace * 3]];
+		dvec3 v1 = vtxCoord[d_mpas_faceCorners[idxFace * 3 + 1]];
+		dvec3 v2 = vtxCoord[d_mpas_faceCorners[idxFace * 3 + 2]];
 
-#ifdef INTERSECT_DOUBLE_PRECISION
 		double t = 0.0;
 		dvec3 rayO = dvec3(r.o);
 		dvec3 rayD = dvec3(r.d);
@@ -288,28 +285,18 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
         dvec3 vtxTB2 = dvec3(v2);
 		bool bhit = rayIntersectsTriangleDouble(rayO, rayD,
                     vtxTB0, vtxTB1, vtxTB2, t);
-#else
-		float t = 0.0;
-		vec3 rayO = vec3(r.o);
-		vec3 rayD = vec3(r.d);
-		vec3 vtxTB0 = vec3(v0);
-        vec3 vtxTB1 = vec3(v1);
-        vec3 vtxTB2 = vec3(v2);
-		bool bhit = rayIntersectsTriangleFloat(rayO, rayD,
-                    vtxTB0, vtxTB1, vtxTB2, t);
-#endif
 
 		if (bhit) {
 			nHit++;
 			
 			if (min_t > t) {
 				min_t = t;
-				tInRec.t = float(t);
+				tInRec.t = t;
 				tInRec.hitFaceid = idxFace; 
 			}
 			if (max_t < t) {
 				max_t = t;
-				tOutRec.t = float(t);
+				tOutRec.t = t;
 				tOutRec.hitFaceid = idxFace;
 				if (idxFace == 1) {
 					tOutRec.nextlayerId = prism.m_iLayer + 1;	// the next prism to be traversed is in the lower layer 
@@ -334,7 +321,7 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	return nHit;
 }
 
-void GetAs0(inout MPASPrism prism, inout float A[12])
+/*void GetAs0(inout MPASPrism prism, inout float A[12])
 {
 	float x1 = (prism.vtxCoordTop[0].x);
 	float y1 = (prism.vtxCoordTop[0].y);
@@ -380,7 +367,7 @@ void GetBs(
     B[5] = fTB[0].x - fTB[0].z;//V1-V3
     B[6] = fTB[1].x - fTB[1].y;//V4-V5
     B[7] = fTB[1].x - fTB[1].z;//V4-V6
-}
+}*/
 
 void GetScalarValue(inout MPASPrism prism, inout vec3 scalars[2]) {
 	for (int iFace = 0; iFace < 2; iFace++) {
@@ -405,7 +392,7 @@ void GetUV(in vec3 O, in vec3 Q, inout float A[12],
 	v = (A[6] * QO.x - A[5] * QO.y + A[4] * QO.z) / denominator;
 }
 
-float GetInterpolateValue2(in MPASPrism prism, in const float u, in const float v,
+/*float GetInterpolateValue2(in MPASPrism prism, in const float u, in const float v,
 	in const vec3 Q, in vec3 fT, in vec3 fB) {
 	vec3 baryCoord = vec3(1.0 - u - v, u, v);
 	vec3 m1 = baryCoord.x * prism.vtxCoordTop[0] + baryCoord.y * prism.vtxCoordTop[1] + baryCoord.z * prism.vtxCoordTop[2];
@@ -430,7 +417,7 @@ vec3 GetInterpolateNormal2(in MPASPrism prism, in const float u, in const float 
 	float t3 = length(Q - m2) / length(m1 - m2);
 	vec3 lerpedNormal = mix(normal_m2, normal_m1, t3);
 	return lerpedNormal;
-}
+}*/
 
 vec3 GetNormal(const vec3 position, const float A[12],
 	const float B[8], const float OP1, const float OP4) {
@@ -472,7 +459,7 @@ vec3 GetNormal(const vec3 position, const float A[12],
 	return normalize(vec3(delx, dely, delz));
 }
 
-void ComputeVerticesNormalTop(in MPASPrism prism, inout vec3 vtxNormals[3]) {	
+/*void ComputeVerticesNormalTop(in MPASPrism prism, inout vec3 vtxNormals[3]) {	
 	//out_Color = vec4(vec3(prism.m_prismId)/15459.0, 1.0);
 	// for each one of the three corners of top face of current prism
 	// compute their shared normals respectively
@@ -560,7 +547,7 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout vec3 vtxNormals[3]) {
 		}
 		vtxNormals[iCorner] = normalize(avgNormal);
 	}
-}
+}*/
 
 float near = 1.79;
 float far = 2.81;
@@ -577,9 +564,8 @@ void main(){
 	Ray ray;
 	ray.o = o_eye;
 	ray.d = normalize(g2f.o_pos - o_eye);
-	gPosition = vec3(ray.d);
 
-	/*HitRec tInHitRecord, tOutHitRecord, tmpInRec, tmpOutRec;
+	HitRec tInHitRecord, tOutHitRecord, tmpInRec, tmpOutRec;
 	tInHitRecord.hitFaceid = -1;
 	tInHitRecord.t = FLOAT_MAX;
 	tInHitRecord.nextlayerId = -1;
@@ -605,9 +591,9 @@ void main(){
 	ReloadVtxInfo(int(curPrismHittedId), tmpInRec.nextlayerId, curPrismHitted);
 	
 	int tmpNHit = rayPrismIntersection(curPrismHitted, ray, tmpInRec, tmpOutRec, tmpNextCellId);
-	//out_Color = vec4(vec3(tmpOutRec.nextlayerId), 1.0);
+	gPosition = vec3(tmpOutRec.nextlayerId);
 
-	if (tmpNHit > 0) {
+	/*if (tmpNHit > 0) {
 		nHit = tmpNHit;
 		nextCellId = tmpNextCellId;
 		curPrismHittedId = triangle_id;

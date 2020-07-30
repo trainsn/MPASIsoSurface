@@ -14,7 +14,7 @@ in G2F{
 	flat int triangle_id;
 	flat int layer_id;
 	flat int hitFaceid;
-	smooth dvec3 o_pos;
+	smooth vec3 o_pos;
 }g2f;
 
 uniform mat4 uInvMVMatrix;
@@ -601,13 +601,12 @@ void main(){
 		tOutHitRecord = (tOutHitRecord.t < tmpOutRec.t) ? tmpOutRec : tOutHitRecord;
 	}	
 
-	//gPosition = vec3(abs(ray.o + tInHitRecord.t * ray.d ));
-	gPosition = vec3(abs(ray.o + ray.d - g2f.o_pos));
+	gPosition = vec3(abs(ray.o + tInHitRecord.t * ray.d - g2f.o_pos));
 
-	/*dvec3 position = vec3(GLOBAL_RADIUS + GLOBAL_RADIUS);
+	dvec3 position = vec3(GLOBAL_RADIUS + GLOBAL_RADIUS);
 	bool hasIsosurface = false;
 	//if (g2f.hitFaceid == tInHitRecord.hitFaceid)
-	{
+	/*{
 		ivec3 maxLevel;
 		GetMaxLevelCell(curPrismHitted, maxLevel);
 		if (curPrismHitted.m_iLayer < maxLevel.x - 1 && 

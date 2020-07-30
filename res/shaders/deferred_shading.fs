@@ -26,6 +26,8 @@ uniform vec3 uPointLightingColor;
 uniform vec3 uPointLightingLocation1;
 uniform vec3 uPointLightingColor1;
 
+const float eps = 1e-6;
+
 vec3 ViewPosFromDepth(float depth){
 	float z = depth * 2.0 - 1.0;
 
@@ -95,6 +97,8 @@ void main()
 	if (uShowNormals == 1) {
 		vec3 nTN      = normalize(vTransformedNormal);
 		FragColor  = vec4( nTN, 1.0 );
+		if (mask < eps)
+		    FragColor  =  vec4(1.0);
 	}
 	if (uShowPosition == 1) {
 		vec3 nP       = vPosition.xyz;

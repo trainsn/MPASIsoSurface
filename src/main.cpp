@@ -31,7 +31,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 1000;
+const int nSample = 10;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -615,11 +615,14 @@ int main(int argc, char **argv)
 		//theta = M_PI / 2;
 		//phi = M_PI / 2;
 		if (!(i % 2)){
-		    theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
-    		phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+		    //theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
+    		//phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+    		theta = M_PI / 2;
+    		phi = M_PI / 2;
     		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
     		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-    		isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
+    		//isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
+    		isoValue = 20.0f;
 		}
 		else {
 		    float up_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;

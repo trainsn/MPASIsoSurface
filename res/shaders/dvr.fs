@@ -79,9 +79,49 @@ struct MPASPrism {
 	int idxVtx[3]; // triangle vertex index is equvalent to hexagon cell index 
 };
 
+#define DOUBLE_ERROR 1.0e-8
+bool rayIntersectsTriangleDouble(dvec3 p, dvec3 d,
+    dvec3 v0, dvec3 v1, dvec3 v2, inout double t)
+{
+    dvec3 e1, e2, h, s, q;
+    double a, f, u, v;
+    //float error = 1.0e-4;//0.005f;
+    e1 = v1 - v0;
+    e2 = v2 - v0;
+    //crossProduct(h, d, e2);
+    h = cross(d, e2);
+    a = dot(e1, h);//innerProduct(e1, h);
+
+    if (a > -DOUBLE_ERROR && a < DOUBLE_ERROR)
+        return(false);
+
+    f = 1.0 / a;
+    s = p - v0;//_vector3d(s, p, v0);
+    u = f * dot(s, h);//(innerProduct(s, h));
+
+    if (u < -DOUBLE_ERROR || u >(1.0 + DOUBLE_ERROR))
+        return(false);
+
+    q = cross(s, e1);//crossProduct(q, s, e1);
+    v = f * dot(d, q);//innerProduct(d, q);
+
+    if (v < -DOUBLE_ERROR || u + v >(1.0 + DOUBLE_ERROR))
+        return(false);
+
+    // at this stage we can compute t to find out where
+    // the intersection point is on the line
+    t = f * dot(e2, q);//innerProduct(e2, q);
+
+    if (t > DOUBLE_ERROR)//ray intersection
+        return(true);
+    else // this means that there is a line intersection
+        // but not a ray intersection
+        return (false);
+}
+
 #define FLOAT_ERROR 1.0E-8
 
-bool rayIntersectsTriangle(vec3 p, vec3 d,
+bool rayIntersectsTriangleFloat(vec3 p, vec3 d,
 	vec3 v0, vec3 v1, vec3 v2, inout float t)
 {
 	vec3 e1, e2, h, s, q;
@@ -216,6 +256,8 @@ int getAdjacentCellId(inout MPASPrism prism, int faceId) {
 	return nextTriangleIds.x;
 }
 
+#define INTERSECT_DOUBLE_PRECISION
+
 int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	inout HitRec tOutRec, inout int nextCellId) {
 	nextCellId = -1;	// assume no next prism to shot into
@@ -237,10 +279,25 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 		vec3 v1 = vtxCoord[d_mpas_faceCorners[idxFace * 3 + 1]];
 		vec3 v2 = vtxCoord[d_mpas_faceCorners[idxFace * 3 + 2]];
 
+#ifdef INTERSECT_DOUBLE_PRECISION
+		double t = 0.0;
+		dvec3 rayO = dvec3(r.o);
+		dvec3 rayD = dvec3(r.d);
+		dvec3 vtxTB0 = dvec3(v0);
+        dvec3 vtxTB1 = dvec3(v1);
+        dvec3 vtxTB2 = dvec3(v2);
+		bool bhit = rayIntersectsTriangleDouble(rayO, rayD,
+                    vtxTB0, vtxTB1, vtxTB2, t);
+#else
 		float t = 0.0;
 		vec3 rayO = vec3(r.o);
 		vec3 rayD = vec3(r.d);
-		bool bhit = rayIntersectsTriangle(rayO, rayD, v0, v1, v2, t);
+		vec3 vtxTB0 = vec3(v0);
+        vec3 vtxTB1 = vec3(v1);
+        vec3 vtxTB2 = vec3(v2);
+		bool bhit = rayIntersectsTriangleFloat(rayO, rayD,
+                    vtxTB0, vtxTB1, vtxTB2, t);
+#endif
 
 		if (bhit) {
 			nHit++;
@@ -587,7 +644,7 @@ void main(){
 			GetUV(vec3(0.0f), position, A, u, v);
 			float scalar = GetInterpolateValue2(curPrismHitted, u, v, position, fTB[0], fTB[1]);
 			// out_Color = vec4(vec3(abs(scalar_last - scalar) * 1000.0) , 1.0);
-
+			
 			if ((scalar_last - threshold) * (scalar - threshold) < 0) {
 				// compute normal on the six vertices of current prism
 				vec3 vtxFNormals[3];
@@ -600,6 +657,7 @@ void main(){
 				position = ray.o + ray.d * t;
 				//out_Color = vec4(position, 1.0);
 				gPosition = position;
+				GetUV(vec3(0.0f), position, A, u, v);
 				gNormal = normalize(uNMatrix * GetInterpolateNormal2(curPrismHitted, u, v, position, 
 												vtxFNormals[0], vtxFNormals[1], vtxFNormals[2],
 												vtxBNormals[0], vtxBNormals[1], vtxBNormals[2]));
@@ -613,7 +671,7 @@ void main(){
 				//gDepth = LinearizeDepth(gDepth) / far;
 				
 				hasIsosurface = true;
-			} 
+			}
 		}
 	}
 	if (!hasIsosurface)

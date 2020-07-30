@@ -591,9 +591,9 @@ void main(){
 	ReloadVtxInfo(int(curPrismHittedId), tmpInRec.nextlayerId, curPrismHitted);
 	
 	int tmpNHit = rayPrismIntersection(curPrismHitted, ray, tmpInRec, tmpOutRec, tmpNextCellId);
-	gPosition = vec3(tmpOutRec.nextlayerId);
+	//gPosition = vec3(tmpOutRec.nextlayerId);
 
-	/*if (tmpNHit > 0) {
+	if (tmpNHit > 0) {
 		nHit = tmpNHit;
 		nextCellId = tmpNextCellId;
 		curPrismHittedId = triangle_id;
@@ -601,9 +601,10 @@ void main(){
 		tOutHitRecord = (tOutHitRecord.t < tmpOutRec.t) ? tmpOutRec : tOutHitRecord;
 	}	
 
-	//out_Color = vec4(vec3(abs(ray.o + tInHitRecord.t * ray.d - g2f.o_pos)), 1.0);
+	//gPosition = vec3(abs(ray.o + tInHitRecord.t * ray.d ));
+	gPosition = vec3(abs(ray.o + ray.d - g2f.o_pos));
 
-	vec3 position = vec3(GLOBAL_RADIUS + GLOBAL_RADIUS);
+	/*dvec3 position = vec3(GLOBAL_RADIUS + GLOBAL_RADIUS);
 	bool hasIsosurface = false;
 	//if (g2f.hitFaceid == tInHitRecord.hitFaceid)
 	{

@@ -14,7 +14,7 @@ in G2F{
 	flat int triangle_id;
 	flat int layer_id;
 	flat int hitFaceid;
-	smooth vec3 o_pos;
+	smooth dvec3 o_pos;
 }g2f;
 
 uniform mat4 uInvMVMatrix;
@@ -60,8 +60,8 @@ int	d_mpas_faceCorners[24] = {
 };
 
 struct Ray{
-	vec3 o;
-	vec3 d;
+	dvec3 o;
+	dvec3 d;
 };
 
 struct HitRec{
@@ -573,12 +573,13 @@ float LinearizeDepth(float depth)
 
 void main(){
 	int triangle_id = g2f.triangle_id;
-	vec3 o_eye = (uInvMVMatrix * vec4(0, 0, 0, 1.0)).xyz;
+	dvec3 o_eye = dvec3((uInvMVMatrix * vec4(0, 0, 0, 1.0)).xyz);
 	Ray ray;
 	ray.o = o_eye;
 	ray.d = normalize(g2f.o_pos - o_eye);
+	gPosition = vec3(ray.d);
 
-	HitRec tInHitRecord, tOutHitRecord, tmpInRec, tmpOutRec;
+	/*HitRec tInHitRecord, tOutHitRecord, tmpInRec, tmpOutRec;
 	tInHitRecord.hitFaceid = -1;
 	tInHitRecord.t = FLOAT_MAX;
 	tInHitRecord.nextlayerId = -1;
@@ -675,5 +676,5 @@ void main(){
 		}
 	}
 	if (!hasIsosurface)
-		discard;
+		discard;*/
 }

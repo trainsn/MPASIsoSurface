@@ -11,7 +11,7 @@ out G2F{
 	flat int triangle_id;
 	flat int layer_id;
 	flat int hitFaceid;
-	smooth vec3 o_pos;
+	smooth dvec3 o_pos;
 }g2f;
 
 struct MPASPrism {
@@ -152,7 +152,7 @@ void main(void){
 				vec4 xyzw = vec4(vtxCoord[idxCell], 1.0);	
 
 				gl_Position = uPMatrix * uMVMatrix * xyzw;
-				g2f.o_pos = xyzw.xyz;
+				g2f.o_pos = dvec3(xyzw.xyz);
 				g2f.triangle_id = vertexId;
 				g2f.layer_id = layerId;
 				g2f.hitFaceid = idxFace;

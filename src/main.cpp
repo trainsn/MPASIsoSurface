@@ -31,7 +31,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 10;
+const int nSample = 1;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -93,7 +93,7 @@ int use_lighting = 1;
 // Render different buffers.
 int show_depth = 0;
 int show_normals = 0;
-int show_position = 0;
+int show_position = 1;
 
 // Used to orbit the point lights.
 float point_light_theta = M_PI / 2;

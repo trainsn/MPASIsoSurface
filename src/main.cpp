@@ -93,7 +93,7 @@ int use_lighting = 1;
 // Render different buffers.
 int show_depth = 0;
 int show_normals = 0;
-int show_position = 1;
+int show_position = 0;
 
 // Used to orbit the point lights.
 float point_light_theta = M_PI / 2;

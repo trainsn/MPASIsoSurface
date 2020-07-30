@@ -348,10 +348,10 @@ void GetAs0(inout MPASPrism prism, inout double A[12])
 	A[11] = (-x2 * y3*z1 - x3 * y1*z2 + x1 * y3*z2 + x2 * y1*z3 - x1 * y2*z3);
 }
 
-/*void GetBs(
+void GetBs(
     inout MPASPrism prism,
-    inout float A[12], inout vec3 fTB[2], inout float B[8],
-    inout float OP1, inout float OP4)
+    inout double A[12], inout dvec3 fTB[2], inout double B[8],
+    inout double OP1, inout double OP4)
 {
 
     OP1 = length(prism.vtxCoordTop[0]);
@@ -367,7 +367,7 @@ void GetAs0(inout MPASPrism prism, inout double A[12])
     B[5] = fTB[0].x - fTB[0].z;//V1-V3
     B[6] = fTB[1].x - fTB[1].y;//V4-V5
     B[7] = fTB[1].x - fTB[1].z;//V4-V6
-}*/
+}
 
 void GetScalarValue(inout MPASPrism prism, inout dvec3 scalars[2]) {
 	for (int iFace = 0; iFace < 2; iFace++) {
@@ -405,31 +405,31 @@ double GetInterpolateValue2(in MPASPrism prism, in const double u, in const doub
 	return lerpedVal;
 }
 
-/*vec3 GetInterpolateNormal2(in MPASPrism prism, in const float u, in const float v,
-	in const vec3 Q, in vec3 nT0, in vec3 nT1, in vec3 nT2, 
-	in vec3 nB0, in vec3 nB1, in vec3 nB2){
-	vec3 baryCoord = vec3(1.0 - u - v, u, v);
-	vec3 m1 = baryCoord.x * prism.vtxCoordTop[0] + baryCoord.y * prism.vtxCoordTop[1] + baryCoord.z * prism.vtxCoordTop[2];
-	vec3 m2 = baryCoord.x * prism.vtxCoordBottom[0] + baryCoord.y * prism.vtxCoordBottom[1] + baryCoord.z * prism.vtxCoordBottom[2];
+dvec3 GetInterpolateNormal2(in MPASPrism prism, in const double u, in const double v,
+	in const dvec3 Q, in dvec3 nT0, in dvec3 nT1, in dvec3 nT2, 
+	in dvec3 nB0, in dvec3 nB1, in dvec3 nB2){
+	dvec3 baryCoord = vec3(1.0 - u - v, u, v);
+	dvec3 m1 = baryCoord.x * prism.vtxCoordTop[0] + baryCoord.y * prism.vtxCoordTop[1] + baryCoord.z * prism.vtxCoordTop[2];
+	dvec3 m2 = baryCoord.x * prism.vtxCoordBottom[0] + baryCoord.y * prism.vtxCoordBottom[1] + baryCoord.z * prism.vtxCoordBottom[2];
 	
-	vec3 normal_m1 = baryCoord.x * nT0 + baryCoord.y * nT1 + baryCoord.z * nT2;
-	vec3 normal_m2 = baryCoord.x * nB0 + baryCoord.y * nB1 + baryCoord.z * nB2;
-	float t3 = length(Q - m2) / length(m1 - m2);
-	vec3 lerpedNormal = mix(normal_m2, normal_m1, t3);
+	dvec3 normal_m1 = baryCoord.x * nT0 + baryCoord.y * nT1 + baryCoord.z * nT2;
+	dvec3 normal_m2 = baryCoord.x * nB0 + baryCoord.y * nB1 + baryCoord.z * nB2;
+	double t3 = length(Q - m2) / length(m1 - m2);
+	dvec3 lerpedNormal = mix(normal_m2, normal_m1, t3);
 	return lerpedNormal;
-}*/
+}
 
-vec3 GetNormal(const vec3 position, const float A[12],
-	const float B[8], const float OP1, const float OP4) {
-	float delx = 0.0f, dely = 0.0f, delz = 0.0f;//partial derivative of scalar value at sampling point.
-	float inv_denom = 1.0f / (A[9] * position.x - A[8] * position.y + A[7] * position.z);
-	float C0 = B[0] * OP1*(A[9] * position.x - A[8] * position.y + A[7] * position.z)*(B[1] * position.x + B[3] * position.y + B[2] * position.z);
+dvec3 GetNormal(const dvec3 position, const double A[12],
+	const double B[8], const double OP1, const double OP4) {
+	double delx = 0.0f, dely = 0.0f, delz = 0.0f;//partial derivative of scalar value at sampling point.
+	double inv_denom = 1.0f / (A[9] * position.x - A[8] * position.y + A[7] * position.z);
+	double C0 = B[0] * OP1*(A[9] * position.x - A[8] * position.y + A[7] * position.z)*(B[1] * position.x + B[3] * position.y + B[2] * position.z);
 	//B10 OP1 (A9 qx			- A8 qy				+ A7 qz)		 (B11 qx			+ B13 qy		 + B12 qz)
-	float temp = (A[10] + A[11])*OP4 + OP1 * (A[9] * position.x - A[8] * position.y + A[7] * position.z);
+	double temp = (A[10] + A[11])*OP4 + OP1 * (A[9] * position.x - A[8] * position.y + A[7] * position.z);
 	//(A10 + A11) OP4	 + OP1 (A9 qx			- A8 qy				+ A7 qz)
-	float C1 = B[6] - B[0] * (B[4] - B[6])*temp;
+	double C1 = B[6] - B[0] * (B[4] - B[6])*temp;
 	//B16 - B10 (B14 - B16)
-	float C2 = B[7] - B[0] * (B[5] - B[7])*temp;
+	double C2 = B[7] - B[0] * (B[5] - B[7])*temp;
 	//B17 - B10 (B15 - B17)
 
 	delx = (inv_denom*inv_denom)*
@@ -459,7 +459,7 @@ vec3 GetNormal(const vec3 position, const float A[12],
 	return normalize(vec3(delx, dely, delz));
 }
 
-/*void ComputeVerticesNormalTop(in MPASPrism prism, inout vec3 vtxNormals[3]) {	
+void ComputeVerticesNormalTop(in MPASPrism prism, inout dvec3 vtxNormals[3]) {	
 	//out_Color = vec4(vec3(prism.m_prismId)/15459.0, 1.0);
 	// for each one of the three corners of top face of current prism
 	// compute their shared normals respectively
@@ -467,7 +467,7 @@ vec3 GetNormal(const vec3 position, const float A[12],
 		int idxCorner = prism.idxVtx[iCorner];	//TRIANGLE_TO_CORNERS_VAR[m_prismId*3+iCorner]
 		// for each nNeighbors prisms (including current prism and nNeighbors-1 neighbor prisms)
 		int nNeighbors = texelFetch(CORNER_TO_TRIANGLES_DIMSIZES, idxCorner - 1).x;
-		vec3 avgNormal = vec3(0.0f);
+		dvec3 avgNormal = vec3(0.0f);
 		for (int iPrism = 0; iPrism < nNeighbors; iPrism++) {	//weighted normal 
 			int id = texelFetch(CORNER_TO_TRIANGLES_VAR, (idxCorner-1) * maxEdges + iPrism).x;	// CORNER_TO_TRIANGLES_VAR[idxCorner * nNeighbors + iPrism]
 
@@ -479,22 +479,22 @@ vec3 GetNormal(const vec3 position, const float A[12],
 				if (curPrismHitted.idxVtx[i] == idxCorner)
 					break;
 			}
-			float A[12];
+			double A[12];
 			GetAs0(curPrismHitted, A);
-			vec3 fTB[2];
+			dvec3 fTB[2];
 			GetScalarValue(curPrismHitted, fTB);
-			float OP1, OP4, B[8];
+			double OP1, OP4, B[8];
 			GetBs(curPrismHitted, A, fTB, B, OP1, OP4);
 			avgNormal += GetNormal(curPrismHitted.vtxCoordTop[i], A, B, OP1, OP4);
 
 			if (prism.m_iLayer > 0) {
 				MPASPrism curPrismHitted1;	// (id, m_iLayer)
 				ReloadVtxInfo(id, prism.m_iLayer - 1, curPrismHitted1); 
-				float A[12];
+				double A[12];
 				GetAs0(curPrismHitted1, A);
-				vec3 fTB[2];
+				dvec3 fTB[2];
 				GetScalarValue(curPrismHitted1, fTB);
-				float OP1, OP4, B[8];
+				double OP1, OP4, B[8];
 				GetBs(curPrismHitted1, A, fTB, B, OP1, OP4);
 				avgNormal += GetNormal(curPrismHitted1.vtxCoordBottom[i], A, B, OP1, OP4);
 			}
@@ -503,14 +503,14 @@ vec3 GetNormal(const vec3 position, const float A[12],
 	}
 }
 
-void ComputeVerticesNormalBottom(in MPASPrism prism, inout vec3 vtxNormals[3]) {  
+void ComputeVerticesNormalBottom(in MPASPrism prism, inout dvec3 vtxNormals[3]) {  
 	// for each one of the three corners of top face of current prism
 	// compute their shared normals respectively
 	for (int iCorner = 0; iCorner < 3; iCorner++) {
 		int idxCorner = prism.idxVtx[iCorner];	//TRIANGLE_TO_CORNERS_VAR[m_prismtId*3+iCorner]
 		// for each nNeighbors prisms (including current prism and nNeighbors-1 neighbor prisms)
 		int nNeighbors = texelFetch(CORNER_TO_TRIANGLES_DIMSIZES, idxCorner - 1).x;
-		vec3 avgNormal = vec3(0.0f);
+		dvec3 avgNormal = vec3(0.0f);
 		for (int iPrism = 0; iPrism < nNeighbors; iPrism++) {	//weighted normal 
 			int id = texelFetch(CORNER_TO_TRIANGLES_VAR, (idxCorner-1) * maxEdges + iPrism).x;	// CORNER_TO_TRIANGLES_VAR[idxCorner * nNeighbors + iPrism]
 			MPASPrism curPrismHitted;	// (id, m_iLayer)
@@ -521,11 +521,11 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout vec3 vtxNormals[3]) {
 				if (curPrismHitted.idxVtx[i] == idxCorner)
 					break;
 			}
-			float A[12];
+			double A[12];
 			GetAs0(curPrismHitted, A);
-			vec3 fTB[2];
+			dvec3 fTB[2];
 			GetScalarValue(curPrismHitted, fTB);
-			float OP1, OP4, B[8];
+			double OP1, OP4, B[8];
 			GetBs(curPrismHitted, A, fTB, B, OP1, OP4);
 			avgNormal += GetNormal(curPrismHitted.vtxCoordBottom[i], A, B, OP1, OP4);
 
@@ -536,18 +536,18 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout vec3 vtxNormals[3]) {
 			prism.m_iLayer < maxLevel.z - 2){
 				MPASPrism curPrismHitted1;	// (id, m_iLayer)
 				ReloadVtxInfo(id, prism.m_iLayer + 1, curPrismHitted1); 
-				float A[12];
+				double A[12];
 				GetAs0(curPrismHitted1, A);
-				vec3 fTB[2];
+				dvec3 fTB[2];
 				GetScalarValue(curPrismHitted1, fTB);
-				float OP1, OP4, B[8];
+				double OP1, OP4, B[8];
 				GetBs(curPrismHitted1, A, fTB, B, OP1, OP4);
 				avgNormal += GetNormal(curPrismHitted1.vtxCoordTop[i], A, B, OP1, OP4);
 			}		
 		}
 		vtxNormals[iCorner] = normalize(avgNormal);
 	}
-}*/
+}
 
 float near = 1.79;
 float far = 2.81;
@@ -634,21 +634,21 @@ void main(){
 			
 			if ((scalar_last - double(threshold)) * (scalar - double(threshold)) < 0) {
 				// compute normal on the six vertices of current prism
-				/*vec3 vtxFNormals[3];
+				dvec3 vtxFNormals[3];
 				ComputeVerticesNormalTop(curPrismHitted, vtxFNormals);
-				vec3 vtxBNormals[3];
-				ComputeVerticesNormalBottom(curPrismHitted, vtxBNormals);*/
+				dvec3 vtxBNormals[3];
+				ComputeVerticesNormalBottom(curPrismHitted, vtxBNormals);
 
 				double offset = (scalar - double(threshold)) / (scalar - scalar_last);
 				t = tOutHitRecord.t - offset * (tOutHitRecord.t - tInHitRecord.t);
 				position = ray.o + ray.d * t;
 				gPosition = vec3(position);
-				/*GetUV(vec3(0.0f), position, A, u, v);
-				gNormal = normalize(uNMatrix * GetInterpolateNormal2(curPrismHitted, u, v, position, 
+				GetUV(vec3(0.0f), position, A, u, v);
+				gNormal = vec3(normalize(dmat3(uNMatrix) * GetInterpolateNormal2(curPrismHitted, u, v, position, 
 												vtxFNormals[0], vtxFNormals[1], vtxFNormals[2],
-												vtxBNormals[0], vtxBNormals[1], vtxBNormals[2]));
+												vtxBNormals[0], vtxBNormals[1], vtxBNormals[2])));
 				if ((scalar_last - threshold) < 0)
-					gNormal = -gNormal;*/
+					gNormal = -gNormal;
 				gDiffuseColor = vec4(1.0, 1.0, 1.0, 1.0);
 				gMask = 1.0;
 				vec4 posProjSpace = uPMatrix * uMVMatrix * vec4(position, 1.0);

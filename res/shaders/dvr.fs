@@ -321,19 +321,19 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	return nHit;
 }
 
-/*void GetAs0(inout MPASPrism prism, inout float A[12])
+void GetAs0(inout MPASPrism prism, inout double A[12])
 {
-	float x1 = (prism.vtxCoordTop[0].x);
-	float y1 = (prism.vtxCoordTop[0].y);
-	float z1 = (prism.vtxCoordTop[0].z);
+	double x1 = (prism.vtxCoordTop[0].x);
+	double y1 = (prism.vtxCoordTop[0].y);
+	double z1 = (prism.vtxCoordTop[0].z);
 
-	float x2 = (prism.vtxCoordTop[1].x);
-	float y2 = (prism.vtxCoordTop[1].y);
-	float z2 = (prism.vtxCoordTop[1].z);
+	double x2 = (prism.vtxCoordTop[1].x);
+	double y2 = (prism.vtxCoordTop[1].y);
+	double z2 = (prism.vtxCoordTop[1].z);
 
-	float x3 = (prism.vtxCoordTop[2].x);
-	float y3 = (prism.vtxCoordTop[2].y);
-	float z3 = (prism.vtxCoordTop[2].z);
+	double x3 = (prism.vtxCoordTop[2].x);
+	double y3 = (prism.vtxCoordTop[2].y);
+	double z3 = (prism.vtxCoordTop[2].z);
 
 	A[1] = (+x3 * y1 - x1 * y3);
 	A[2] = (+x3 * z1 - x1 * z3);
@@ -348,7 +348,7 @@ int rayPrismIntersection(inout MPASPrism prism, in Ray r, inout HitRec tInRec,
 	A[11] = (-x2 * y3*z1 - x3 * y1*z2 + x1 * y3*z2 + x2 * y1*z3 - x1 * y2*z3);
 }
 
-void GetBs(
+/*void GetBs(
     inout MPASPrism prism,
     inout float A[12], inout vec3 fTB[2], inout float B[8],
     inout float OP1, inout float OP4)
@@ -369,7 +369,7 @@ void GetBs(
     B[7] = fTB[1].x - fTB[1].z;//V4-V6
 }*/
 
-void GetScalarValue(inout MPASPrism prism, inout vec3 scalars[2]) {
+void GetScalarValue(inout MPASPrism prism, inout dvec3 scalars[2]) {
 	for (int iFace = 0; iFace < 2; iFace++) {
 		int layerId = prism.m_iLayer + iFace;
 		scalars[iFace].x = texelFetch(CLIMATE_VALS_VAR, (prism.idxVtx[0]-1) * TOTAL_LAYERS + layerId).r; //CLIMATE_VALS_VAR[idxVtx[0] * TOTAL_LAYERS + (m_iLayer + iFace)];
@@ -384,28 +384,28 @@ void GetMaxLevelCell(inout MPASPrism prism, inout ivec3 maxLevel){
 	maxLevel.z = texelFetch(maxLevelCell, prism.idxVtx[2]-1).r;
 }
 
-void GetUV(in vec3 O, in vec3 Q, inout float A[12],
-	inout float u, inout float v) {
-	vec3 QO = (Q - O);//*Factor;
-	float denominator = (A[9] * QO.x - A[8] * QO.y + A[7] * QO.z);
+void GetUV(in dvec3 O, in dvec3 Q, inout double A[12],
+	inout double u, inout double v) {
+	dvec3 QO = (Q - O);//*Factor;
+	double denominator = (A[9] * QO.x - A[8] * QO.y + A[7] * QO.z);
 	u = (A[3] * QO.x - A[2] * QO.y + A[1] * QO.z) / denominator;
 	v = (A[6] * QO.x - A[5] * QO.y + A[4] * QO.z) / denominator;
 }
 
-/*float GetInterpolateValue2(in MPASPrism prism, in const float u, in const float v,
-	in const vec3 Q, in vec3 fT, in vec3 fB) {
-	vec3 baryCoord = vec3(1.0 - u - v, u, v);
-	vec3 m1 = baryCoord.x * prism.vtxCoordTop[0] + baryCoord.y * prism.vtxCoordTop[1] + baryCoord.z * prism.vtxCoordTop[2];
-	vec3 m2 = baryCoord.x * prism.vtxCoordBottom[0] + baryCoord.y * prism.vtxCoordBottom[1] + baryCoord.z * prism.vtxCoordBottom[2];
+double GetInterpolateValue2(in MPASPrism prism, in const double u, in const double v,
+	in const dvec3 Q, in dvec3 fT, in dvec3 fB) {
+	dvec3 baryCoord = vec3(1.0 - u - v, u, v);
+	dvec3 m1 = baryCoord.x * prism.vtxCoordTop[0] + baryCoord.y * prism.vtxCoordTop[1] + baryCoord.z * prism.vtxCoordTop[2];
+	dvec3 m2 = baryCoord.x * prism.vtxCoordBottom[0] + baryCoord.y * prism.vtxCoordBottom[1] + baryCoord.z * prism.vtxCoordBottom[2];
 
-	float scalar_m1 = dot(baryCoord, fT);
-	float scalar_m2 = dot(baryCoord, fB);
-	float t3 = length(Q - m2) / length(m1 - m2);
-	float lerpedVal = mix(scalar_m2, scalar_m1, t3);	//lerp()
+	double scalar_m1 = dot(baryCoord, fT);
+	double scalar_m2 = dot(baryCoord, fB);
+	double t3 = length(Q - m2) / length(m1 - m2);
+	double lerpedVal = mix(scalar_m2, scalar_m1, t3);	//lerp()
 	return lerpedVal;
 }
 
-vec3 GetInterpolateNormal2(in MPASPrism prism, in const float u, in const float v,
+/*vec3 GetInterpolateNormal2(in MPASPrism prism, in const float u, in const float v,
 	in const vec3 Q, in vec3 nT0, in vec3 nT1, in vec3 nT2, 
 	in vec3 nB0, in vec3 nB1, in vec3 nB2){
 	vec3 baryCoord = vec3(1.0 - u - v, u, v);
@@ -606,50 +606,49 @@ void main(){
 	dvec3 position = vec3(GLOBAL_RADIUS + GLOBAL_RADIUS);
 	bool hasIsosurface = false;
 	//if (g2f.hitFaceid == tInHitRecord.hitFaceid)
-	/*{
+	{
 		ivec3 maxLevel;
 		GetMaxLevelCell(curPrismHitted, maxLevel);
 		if (curPrismHitted.m_iLayer < maxLevel.x - 1 && 
 		curPrismHitted.m_iLayer < maxLevel.y - 1 && 
 		curPrismHitted.m_iLayer < maxLevel.z - 1) {
 			// loop through 3d grid 
-			float A[12];
+			double A[12];
 			GetAs0(curPrismHitted, A);
-			vec3 fTB[2];
+			dvec3 fTB[2];
 			GetScalarValue(curPrismHitted, fTB);
 			
 			if (tInHitRecord.t < 0.0f)
 				tInHitRecord.t = 0.0f;
-			float t = tInHitRecord.t;	
+			double t = tInHitRecord.t;	
 			position = ray.o + ray.d * t;
-			float u, v;
+			double u, v;
 			GetUV(vec3(0.0f), position, A, u, v);
-			float scalar_last = GetInterpolateValue2(curPrismHitted, u, v, position, fTB[0], fTB[1]);
+			double scalar_last = GetInterpolateValue2(curPrismHitted, u, v, position, fTB[0], fTB[1]);
 		
 			t = tOutHitRecord.t; 
 			position = ray.o + ray.d * t;
 			GetUV(vec3(0.0f), position, A, u, v);
-			float scalar = GetInterpolateValue2(curPrismHitted, u, v, position, fTB[0], fTB[1]);
+			double scalar = GetInterpolateValue2(curPrismHitted, u, v, position, fTB[0], fTB[1]);
 			// out_Color = vec4(vec3(abs(scalar_last - scalar) * 1000.0) , 1.0);
 			
-			if ((scalar_last - threshold) * (scalar - threshold) < 0) {
+			if ((scalar_last - double(threshold)) * (scalar - double(threshold)) < 0) {
 				// compute normal on the six vertices of current prism
-				vec3 vtxFNormals[3];
+				/*vec3 vtxFNormals[3];
 				ComputeVerticesNormalTop(curPrismHitted, vtxFNormals);
 				vec3 vtxBNormals[3];
-				ComputeVerticesNormalBottom(curPrismHitted, vtxBNormals);
+				ComputeVerticesNormalBottom(curPrismHitted, vtxBNormals);*/
 
-				float offset = (scalar - threshold) / (scalar - scalar_last);
+				double offset = (scalar - double(threshold)) / (scalar - scalar_last);
 				t = tOutHitRecord.t - offset * (tOutHitRecord.t - tInHitRecord.t);
 				position = ray.o + ray.d * t;
-				//out_Color = vec4(position, 1.0);
-				gPosition = position;
-				GetUV(vec3(0.0f), position, A, u, v);
+				gPosition = vec3(position);
+				/*GetUV(vec3(0.0f), position, A, u, v);
 				gNormal = normalize(uNMatrix * GetInterpolateNormal2(curPrismHitted, u, v, position, 
 												vtxFNormals[0], vtxFNormals[1], vtxFNormals[2],
 												vtxBNormals[0], vtxBNormals[1], vtxBNormals[2]));
 				if ((scalar_last - threshold) < 0)
-					gNormal = -gNormal;
+					gNormal = -gNormal;*/
 				gDiffuseColor = vec4(1.0, 1.0, 1.0, 1.0);
 				gMask = 1.0;
 				vec4 posProjSpace = uPMatrix * uMVMatrix * vec4(position, 1.0);
@@ -662,5 +661,5 @@ void main(){
 		}
 	}
 	if (!hasIsosurface)
-		discard;*/
+		discard;
 }

@@ -414,7 +414,7 @@ dvec3 GetNormal(const dvec3 position, const double A[12],
 	//A7 C0 +
 	// C1 ((A3 A7		- A1 A9) qx				+ (-A2 A7		+ A1 A8) qy) +
 	// C2 ((A6 A7		- A4 A9) qx				+ (-A5 A7		+ A4 A8) qy)
-	return normalize(vec3(delx, dely, delz));
+	return normalize(dvec3(delx, dely, delz));
 }
 
 void ComputeVerticesNormalTop(in MPASPrism prism, inout dvec3 vtxNormals[3]) {	
@@ -591,14 +591,14 @@ void main(){
 				double offset = (scalar - double(threshold)) / (scalar - scalar_last);
 				t = tOutHitRecord.t - offset * (tOutHitRecord.t - tInHitRecord.t);
 				position = ray.o + ray.d * t;
-				//gPosition = vec3(position);
+				gPosition = vec3(position);
 				GetUV(vec3(0.0f), position, A, u, v);
 				gNormal = vec3(normalize(dmat3(uNMatrix) * GetInterpolateNormal2(curPrismHitted, u, v, position, 
 												vtxFNormals[0], vtxFNormals[1], vtxFNormals[2],
 												vtxBNormals[0], vtxBNormals[1], vtxBNormals[2])));
-			    gPosition = vec3(length(gNormal));
 				if ((scalar_last - threshold) < 0)
 					gNormal = -gNormal;
+				//gNormal = vec3(vtxFNormals[0]);
 				gDiffuseColor = vec4(1.0, 1.0, 1.0, 1.0);
 				gMask = 1.0;
 				vec4 posProjSpace = uPMatrix * uMVMatrix * vec4(position, 1.0);

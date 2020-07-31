@@ -31,7 +31,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 1;
+const int nSample = 10;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -93,7 +93,7 @@ int use_lighting = 1;
 // Render different buffers.
 int show_depth = 0;
 int show_normals = 0;
-int show_position = 1;
+int show_position = 0;
 
 // Used to orbit the point lights.
 float point_light_theta = M_PI / 2;
@@ -681,14 +681,14 @@ int main(int argc, char **argv)
 		//theta = M_PI / 2;
 		//phi = M_PI / 2;
 		if (!(i % 2)){
-		    //theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
-    		//phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
-    		theta = M_PI / 2;
-    		phi = M_PI / 2;
+		    theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
+    		phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+    		//theta = M_PI / 2;
+    		//phi = M_PI / 2;
     		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
     		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-    		//isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
-    		isoValue = 20.0f;
+    		isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
+    		//isoValue = 20.0f;
 		}
 		else {
 		    float up_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
@@ -881,7 +881,7 @@ int main(int argc, char **argv)
 		}
 		
 		// 3. Lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content. 
-		/*glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(base_color[0], base_color[1], base_color[2], 1.0); // Set the WebGL background color.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -893,15 +893,15 @@ int main(int argc, char **argv)
 		shaderLightingPass.setInt("gDepth", 4);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glBindTexture(GL_TEXTURE_2D, gPositionPost);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glBindTexture(GL_TEXTURE_2D, gNormalPost);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
+		glBindTexture(GL_TEXTURE_2D, gDiffuseColorPost);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, gMask);
+		glBindTexture(GL_TEXTURE_2D, gMaskPost);
 		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, gDepth);
+		glBindTexture(GL_TEXTURE_2D, gDepthPost);
 
 		// set lighting sources 
 		// Let the fragment shader know that perspective projection is being used.
@@ -980,7 +980,7 @@ int main(int argc, char **argv)
 		fprintf(imageNames, "%04d/%s\n", simIdx, imagename);
 
 		delete pBuffer;
-		delete pImage;*/
+		delete pImage;
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------

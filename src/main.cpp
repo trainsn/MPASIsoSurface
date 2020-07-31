@@ -31,7 +31,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 10;
+const int nSample = 1000;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -84,7 +84,7 @@ glm::mat4 view;
 glm::mat4 model;
 
 // Lighting power.
-float lighting_power = 2;
+float lighting_power = 0.5;
 
 // lighting parameters 
 // Use lighting?
@@ -925,16 +925,12 @@ int main(int argc, char **argv)
 			shaderLightingPass.setVec3("uAmbientColor", base_color);
 
 			// Point light 1.
-			float point_light_position_x = 0 + 13.5 * cos(point_light_theta) * sin(point_light_phi);
-			float point_light_position_y = 0 + 13.5 * sin(point_light_theta) * sin(point_light_phi);
-			float point_light_position_z = 0 + 13.5 * cos(point_light_phi);
-			
-			float point_light_dist = 13.5;
+			float point_light_dist = 2.3;
 			glm::vec3 point_light_direction = direction / dist * point_light_dist;
 			glm::vec3 point_light_position = center + point_light_direction;
 			glm::vec4 light_pos(point_light_position.x, point_light_position.y, point_light_position.z, 1.0);
 			light_pos = view * light_pos;
-
+			
 			shaderLightingPass.setVec3("uPointLightingColor", lighting_power, lighting_power, lighting_power);
 			shaderLightingPass.setVec3("uPointLightingLocation", light_pos[0], light_pos[1], light_pos[2]);
 

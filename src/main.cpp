@@ -93,7 +93,7 @@ int use_lighting = 1;
 // Render different buffers.
 int show_depth = 0;
 int show_normals = 0;
-int show_position = 0;
+int show_position = 1;
 
 // Used to orbit the point lights.
 float point_light_theta = M_PI / 2;
@@ -402,6 +402,133 @@ void setMatrixUniforms(Shader ourShader) {
 	return;
 }
 
+unsigned int gBuffer;
+unsigned int gPosition, gNormal, gDiffuseColor, gMask, gDepth;
+void setUpgBuffer(){
+    	// set up G-buffer 
+	// 5 textures
+	// 1. Position (RGB)
+	// 2. Color(RGBA)
+	// 3. Normals 
+	// 4. Masks
+	// 5. Depth
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	
+	// position color buffer 
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	// normal color buffer 
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+	// diffuseColor color buffer 
+	glGenTextures(1, &gDiffuseColor);
+	glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gDiffuseColor, 0);
+	// mask color buffer
+	glGenTextures(1, &gMask);
+	glBindTexture(GL_TEXTURE_2D, gMask);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gMask, 0);
+	// depth color buffer
+	glGenTextures(1, &gDepth);
+	glBindTexture(GL_TEXTURE_2D, gDepth);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gDepth, 0);
+
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+	unsigned int attachment[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+	glDrawBuffers(5, attachment);
+	
+	// create and attach depth buffer (renderbuffer)
+	unsigned int rboDepth;
+	glGenRenderbuffers(1, &rboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+	//finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+unsigned int gBufferPost;
+unsigned int gPositionPost, gNormalPost, gDiffuseColorPost, gMaskPost, gDepthPost;
+void setUpgBufferPost(){
+    // set up G-buffer Post
+	// 5 textures
+	// 1. PositionPost (RGB)
+	// 2. ColorPost(RGBA)
+	// 3. NormalsPost 
+	// 4. MasksPost
+	// 5. DepthPost
+	glGenFramebuffers(1, &gBufferPost);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBufferPost);
+	
+	// position color buffer 
+	glGenTextures(1, &gPositionPost);
+	glBindTexture(GL_TEXTURE_2D, gPositionPost);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPositionPost, 0);
+	// normal color buffer 
+	glGenTextures(1, &gNormalPost);
+	glBindTexture(GL_TEXTURE_2D, gNormalPost);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormalPost, 0);
+	// diffuseColor color buffer 
+	glGenTextures(1, &gDiffuseColorPost);
+	glBindTexture(GL_TEXTURE_2D, gDiffuseColorPost);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gDiffuseColorPost, 0);
+	// mask color buffer
+	glGenTextures(1, &gMaskPost);
+	glBindTexture(GL_TEXTURE_2D, gMaskPost);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gMaskPost, 0);
+	// depth color buffer
+	glGenTextures(1, &gDepthPost);
+	glBindTexture(GL_TEXTURE_2D, gDepthPost);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gDepthPost, 0);
+
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+	unsigned int attachmentPost[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+	glDrawBuffers(5, attachmentPost);
+
+	//finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+}
+
 int main(int argc, char **argv)
 {
 	char input_name[1024];
@@ -470,76 +597,15 @@ int main(int argc, char **argv)
 	// build and compile shaders
 	// -------------------------
 	Shader shader("../res/shaders/triangle_frustrum.vs", "../res/shaders/dvr.fs", "../res/shaders/dvr.gs");
+	Shader shaderPost("../res/shaders/process_tex.vs", "../res/shaders/process_tex.fs");
 	//Shader shader("triangle_center.vs", "triangle_center.fs");
 	//Shader shader("hexagon_center.vs", "hexagon_center.fs");
 	//Shader shader("triangle_mesh.vs", "triangle_mesh.fs", "triangle_mesh.gs");
 	//Shader shader("hexagon_mesh.vs", "hexagon_mesh.fs", "hexagon_mesh_fill.gs");
 	Shader shaderLightingPass("../res/shaders/deferred_shading.vs", "../res/shaders/deferred_shading.fs");
 
-	// set up G-buffer 
-	// 5 textures
-	// 1. Position (RGB)
-	// 2. Color(RGBA)
-	// 3. Normals 
-	// 4. Masks
-	// 5. Depth
-	unsigned int gBuffer;
-	glGenFramebuffers(1, &gBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-	unsigned int gPosition, gNormal, gDiffuseColor, gMask, gDepth;
-
-	// position color buffer 
-	glGenTextures(1, &gPosition);
-	glBindTexture(GL_TEXTURE_2D, gPosition);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-	// normal color buffer 
-	glGenTextures(1, &gNormal);
-	glBindTexture(GL_TEXTURE_2D, gNormal);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-	// diffuseColor color buffer 
-	glGenTextures(1, &gDiffuseColor);
-	glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gDiffuseColor, 0);
-	// mask color buffer
-	glGenTextures(1, &gMask);
-	glBindTexture(GL_TEXTURE_2D, gMask);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gMask, 0);
-	// depth color buffer
-	glGenTextures(1, &gDepth);
-	glBindTexture(GL_TEXTURE_2D, gDepth);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gDepth, 0);
-
-	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
-	unsigned int attachment[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
-	glDrawBuffers(5, attachment);
-	
-	// create and attach depth buffer (renderbuffer)
-	unsigned int rboDepth;
-	glGenRenderbuffers(1, &rboDepth);
-	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-
-	//finally check if framebuffer is complete
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Framebuffer not complete!" << std::endl;
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    setUpgBuffer();
+	setUpgBufferPost();
 
 	initTextures();
 	initBuffers();
@@ -723,7 +789,34 @@ int main(int argc, char **argv)
 		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 		glDrawArrays(GL_POINTS, 0, nVertices * (nVertLevels - 1));
 		//glDrawArrays(GL_POINTS, 0, 1);
+		
+		// 2. Post pass: post processing framebuffer, remove discontinuity
+		glBindFramebuffer(GL_FRAMEBUFFER, gBufferPost);
+		glClearColor(base_color[0], base_color[1], base_color[2], 1.0); // Set the WebGL background color.
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        shaderPost.use();
+        shaderPost.setInt("gPosition", 0);
+		shaderPost.setInt("gNormal", 1);
+		shaderPost.setInt("gDiffuseColor", 2);
+		shaderPost.setInt("gMask", 3);
+		shaderPost.setInt("gDepth", 4);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, gMask);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, gDepth);
+		
+		// finally render quad
+		renderQuad();
+
+		// write framebuffer to hdf5 file
 		char filename[1024];
 	    sprintf(filename, "MPAS_%06d_%.5f_%.6f_%.10f_%.10f.h5", simIdx * nSample + i, BwsA, isoValue, theta * 180 / M_PI, phi * 180 / M_PI);
 		if (dump_buffer) {
@@ -786,9 +879,9 @@ int main(int argc, char **argv)
 			status = H5Sclose(space3);
 			status = H5Fclose(file);
 		}
-
-		// 2. Lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content. 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		// 3. Lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content. 
+		/*glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(base_color[0], base_color[1], base_color[2], 1.0); // Set the WebGL background color.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -846,12 +939,12 @@ int main(int argc, char **argv)
 			shaderLightingPass.setVec3("uPointLightingLocation", light_pos[0], light_pos[1], light_pos[2]);
 
 			// Point light 2.
-			/*float point_light_position_x1 = 0 + 8.0 * cos(point_light_theta1) * sin(point_light_phi1);
-			float point_light_position_y1 = 0 + 8.0 * sin(point_light_theta1) * sin(point_light_phi1);
-			float point_light_position_z1 = 0 + 8.0 * cos(point_light_phi1);
+			//float point_light_position_x1 = 0 + 8.0 * cos(point_light_theta1) * sin(point_light_phi1);
+			//float point_light_position_y1 = 0 + 8.0 * sin(point_light_theta1) * sin(point_light_phi1);
+			//float point_light_position_z1 = 0 + 8.0 * cos(point_light_phi1);
 
-			shaderLightingPass.setVec3("uPointLightingColor1", lighting_power, lighting_power, lighting_power);
-			shaderLightingPass.setVec3("uPointLightingLocation1", point_light_position_x1, point_light_position_y1, point_light_position_z1);*/
+			//shaderLightingPass.setVec3("uPointLightingColor1", lighting_power, lighting_power, lighting_power);
+			//shaderLightingPass.setVec3("uPointLightingLocation1", point_light_position_x1, point_light_position_y1, point_light_position_z1;
 		}
 
 		shaderLightingPass.setInt("uUseLighting", use_lighting);
@@ -887,7 +980,7 @@ int main(int argc, char **argv)
 		fprintf(imageNames, "%04d/%s\n", simIdx, imagename);
 
 		delete pBuffer;
-		delete pImage;
+		delete pImage;*/
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------

@@ -103,6 +103,7 @@ void main()
 	if (uShowPosition == 1) {
 		// vec3 nP       = vPosition.xyz;
 		vec3 nP       = texture(gPosition, TexCoords).rgb;
-		FragColor  = vec4( nP.r, nP.g, nP.b, 1.0 );
+		//FragColor  = vec4( nP.r, nP.g, nP.b, 1.0 );
+		FragColor  = vec4(vec3( (1-texture(gPosition, TexCoords).r) * mask), 1.0);
 	}
 }

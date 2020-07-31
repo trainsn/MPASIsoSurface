@@ -1,6 +1,5 @@
 #version 430 core
 
-//out vec4 out_Color;
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gDiffuseColor;
@@ -117,47 +116,6 @@ bool rayIntersectsTriangleDouble(dvec3 p, dvec3 d,
     else // this means that there is a line intersection
         // but not a ray intersection
         return (false);
-}
-
-#define FLOAT_ERROR 1.0E-8
-
-bool rayIntersectsTriangleFloat(vec3 p, vec3 d,
-	vec3 v0, vec3 v1, vec3 v2, inout float t)
-{
-	vec3 e1, e2, h, s, q;
-	float a, f, u, v;
-	//float error = 1.0e-4;//0.005f;
-	e1 = v1 - v0;
-	e2 = v2 - v0;
-	//crossProduct(h, d, e2);
-	h = cross(d, e2);
-	a = dot(e1, h);//innerProduct(e1, h);
-
-	if (a > -FLOAT_ERROR && a < FLOAT_ERROR)
-		return(false);
-
-	f = 1.0f / a;
-	s = p - v0;//_vector3d(s, p, v0);
-	u = f * dot(s, h);//(innerProduct(s, h));
-
-	if (u < -FLOAT_ERROR || u >(1.0f + FLOAT_ERROR))
-		return(false);
-
-	q = cross(s, e1);//crossProduct(q, s, e1);
-	v = f * dot(d, q);//innerProduct(d, q);
-
-	if (v < -FLOAT_ERROR || u + v >(1.0f + FLOAT_ERROR))
-		return(false);
-
-	// at this stage we can compute t to find out where
-	// the intersection point is on the line
-	t = f * dot(e2, q);//innerProduct(e2, q);
-
-	if (t > FLOAT_ERROR)//ray intersection
-		return(true);
-	else // this means that there is a line intersection
-		// but not a ray intersection
-		return (false);
 }
 
 bool ReloadVtxInfo(in int triangle_id, in int iLayer, inout MPASPrism prism) {
@@ -549,15 +507,6 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout dvec3 vtxNormals[3]) 
 	}
 }
 
-float near = 1.79;
-float far = 2.81;
-
-float LinearizeDepth(float depth) 
-{
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));    
-}
-
 void main(){
 	int triangle_id = g2f.triangle_id;
 	dvec3 o_eye = dvec3((uInvMVMatrix * vec4(0, 0, 0, 1.0)).xyz);
@@ -642,11 +591,12 @@ void main(){
 				double offset = (scalar - double(threshold)) / (scalar - scalar_last);
 				t = tOutHitRecord.t - offset * (tOutHitRecord.t - tInHitRecord.t);
 				position = ray.o + ray.d * t;
-				gPosition = vec3(position);
+				//gPosition = vec3(position);
 				GetUV(vec3(0.0f), position, A, u, v);
 				gNormal = vec3(normalize(dmat3(uNMatrix) * GetInterpolateNormal2(curPrismHitted, u, v, position, 
 												vtxFNormals[0], vtxFNormals[1], vtxFNormals[2],
 												vtxBNormals[0], vtxBNormals[1], vtxBNormals[2])));
+			    gPosition = vec3(length(gNormal));
 				if ((scalar_last - threshold) < 0)
 					gNormal = -gNormal;
 				gDiffuseColor = vec4(1.0, 1.0, 1.0, 1.0);

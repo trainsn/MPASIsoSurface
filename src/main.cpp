@@ -31,7 +31,7 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 1000;
+const int nSample = 10;
 
 // settings
 const unsigned int SCR_WIDTH = 256;
@@ -550,16 +550,20 @@ int main(int argc, char **argv)
 	FILE *imageNames = NULL;
 
     //save filename 
+    char h5NamesFilename[1024];
 	if (train)
-		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/h5Names.txt", "a");
+	    sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/h5Names.txt", simIdx);
 	else 
-		h5Names = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/h5Names.txt", "a");
+		sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/h5Names.txt", simIdx);
+	h5Names = fopen(h5NamesFilename, "w");
 
+    char imageNamesFilename[1024];
 	if (train)
-		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/train/imageNames.txt", "a");
+	    sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/imageNames.txt", simIdx);
 	else 
-		imageNames = fopen("/fs/project/PAS0027/bufferLearning/data/MPAS/test/imageNames.txt", "a");
-
+		sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/imageNames.txt", simIdx);
+	imageNames = fopen(imageNamesFilename, "w");
+	
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();

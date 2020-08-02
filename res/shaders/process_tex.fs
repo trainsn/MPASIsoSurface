@@ -44,7 +44,8 @@ void main(){
 		if (near_valid >= 6){
 			gMaskPost = 1;
 			for (int i = 0; i < 8; i++){
-			    if (abs(texture(gMask, TexCoords + offsets[i]).r - 1) < eps){	// valid point 
+			    if (abs(texture(gMask, TexCoords + offsets[i]).r - 1) < eps 
+			    && !isnan(texture(gNormal, TexCoords + offsets[i]).r)){	// valid point 
 				    gDepthPost += texture(gDepth, TexCoords + offsets[i]).r / near_valid;
 				    gPositionPost += texture(gPosition, TexCoords + offsets[i]).rgb / near_valid;
 				    gNormalPost += texture(gNormal, TexCoords + offsets[i]).rgb;
@@ -70,7 +71,8 @@ void main(){
 		    gDiffuseColorPost = vec4(0.0);
 		    for (int i = 0; i < 8; i++){
 		        if (texture(gMask, TexCoords + offsets[i]).r > 1 - eps && 
-		        texture(gDepth, TexCoords).r - texture(gDepth, TexCoords + offsets[i]).r > maxGap){
+		        texture(gDepth, TexCoords).r - texture(gDepth, TexCoords + offsets[i]).r > maxGap && 
+		        !isnan(texture(gNormal, TexCoords + offsets[i]).r)){
 		            gDepthPost += texture(gDepth, TexCoords + offsets[i]).r / near_valid;
 				    gPositionPost += texture(gPosition, TexCoords + offsets[i]).rgb / near_valid;
 				    gNormalPost += texture(gNormal, TexCoords + offsets[i]).rgb;
@@ -80,4 +82,13 @@ void main(){
 		    gNormalPost = normalize(gNormalPost);
 		}
     }
+    
+    if (isnan(gNormalPost.r)){
+        gPositionPost = vec3(0.0f);
+        gNormalPost = vec3(0.0f);
+        gDiffuseColorPost = vec4(0.0f);
+        gMaskPost = 0.0f;
+        gDepthPost = 0.0f;
+    }
+    
 }

@@ -426,6 +426,7 @@ void ComputeVerticesNormalTop(in MPASPrism prism, inout dvec3 vtxNormals[3]) {
 		// for each nNeighbors prisms (including current prism and nNeighbors-1 neighbor prisms)
 		int nNeighbors = texelFetch(CORNER_TO_TRIANGLES_DIMSIZES, idxCorner - 1).x;
 		dvec3 avgNormal = vec3(0.0f);
+		int count = 1;
 		for (int iPrism = 0; iPrism < nNeighbors; iPrism++) {	//weighted normal 
 			int id = texelFetch(CORNER_TO_TRIANGLES_VAR, (idxCorner-1) * maxEdges + iPrism).x;	// CORNER_TO_TRIANGLES_VAR[idxCorner * nNeighbors + iPrism]
 
@@ -455,9 +456,10 @@ void ComputeVerticesNormalTop(in MPASPrism prism, inout dvec3 vtxNormals[3]) {
 				double OP1, OP4, B[8];
 				GetBs(curPrismHitted1, A, fTB, B, OP1, OP4);
 				avgNormal += GetNormal(curPrismHitted1.vtxCoordBottom[i], A, B, OP1, OP4);
+				count = 2; 
 			}
 		}
-		vtxNormals[iCorner] = normalize(avgNormal);
+		vtxNormals[iCorner] = avgNormal / double(nNeighbors * count);
 	}
 }
 
@@ -469,6 +471,7 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout dvec3 vtxNormals[3]) 
 		// for each nNeighbors prisms (including current prism and nNeighbors-1 neighbor prisms)
 		int nNeighbors = texelFetch(CORNER_TO_TRIANGLES_DIMSIZES, idxCorner - 1).x;
 		dvec3 avgNormal = vec3(0.0f);
+		int count = 1;
 		for (int iPrism = 0; iPrism < nNeighbors; iPrism++) {	//weighted normal 
 			int id = texelFetch(CORNER_TO_TRIANGLES_VAR, (idxCorner-1) * maxEdges + iPrism).x;	// CORNER_TO_TRIANGLES_VAR[idxCorner * nNeighbors + iPrism]
 			MPASPrism curPrismHitted;	// (id, m_iLayer)
@@ -501,9 +504,10 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout dvec3 vtxNormals[3]) 
 				double OP1, OP4, B[8];
 				GetBs(curPrismHitted1, A, fTB, B, OP1, OP4);
 				avgNormal += GetNormal(curPrismHitted1.vtxCoordTop[i], A, B, OP1, OP4);
+				count = 2;
 			}		
 		}
-		vtxNormals[iCorner] = normalize(avgNormal);
+		vtxNormals[iCorner] = avgNormal / double(nNeighbors * count);
 	}
 }
 
@@ -566,6 +570,9 @@ void main(){
 			GetAs0(curPrismHitted, A);
 			dvec3 fTB[2];
 			GetScalarValue(curPrismHitted, fTB);
+			double OP1, OP4;
+            double B[8];
+            GetBs(curPrismHitted, A, fTB, B, OP1, OP4);
 			
 			if (tInHitRecord.t < 0.0f)
 				tInHitRecord.t = 0.0f;

@@ -88,15 +88,15 @@ void main()
 	if (uShowDepth == 1) {
 		// FragColor = mix( vec4( 1.0 ), vec4( vec3( 0.0 ), 1.0 ), smoothstep( 0.1, 1.0, fog_coord ) );
 		//FragColor = vDiffuseColor;
-		//float depth = texture(gDepth, TexCoords).r;
-		//FragColor = vec4( vec3(depth), 1.0 );
-		float mask = texture(gMask, TexCoords).r;
-		FragColor = vec4( vec3(mask), 1.0 );
+		float depth = texture(gDepth, TexCoords).r;
+		FragColor = vec4( vec3(depth), 1.0 );
+		//float mask = texture(gMask, TexCoords).r;
+		//FragColor = vec4( vec3(mask), 1.0 );
 		
 	}
 	if (uShowNormals == 1) {
 		vec3 nTN      = normalize(vTransformedNormal);
-		FragColor  = vec4( nTN, 1.0 );
+		FragColor  = vec4(nTN * 0.5 + 0.5, 1.0);
 		if (mask < eps)
 		    FragColor  =  vec4(1.0);
 	}

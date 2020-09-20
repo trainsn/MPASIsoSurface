@@ -33,9 +33,8 @@ uniform isamplerBuffer verticesOnEdge;
 uniform isamplerBuffer verticesOnCell;
 uniform isamplerBuffer nEdgesOnCell;
 uniform isamplerBuffer maxLevelCell;
-uniform samplerBuffer cellVal;
+uniform samplerBuffer temperature;
 //symbolic definition of dual triangle mesh
-#define CLIMATE_VALS_VAR  cellVal
 #define TRIANGLE_TO_EDGES_VAR edgesOnVertex
 #define EDGE_CORNERS_VAR cellsOnEdge
 #define CORNERS_LAT_VAR latCell
@@ -327,7 +326,7 @@ void GetBs(
     B[7] = fTB[1].x - fTB[1].z;//V4-V6
 }
 
-void GetScalarValue(inout MPASPrism prism, inout dvec3 scalars[2]) {
+void GetScalarValue(inout MPASPrism prism, samplerBuffer CLIMATE_VALS_VAR, inout dvec3 scalars[2]) {
 	for (int iFace = 0; iFace < 2; iFace++) {
 		int layerId = prism.m_iLayer + iFace;
 		scalars[iFace].x = texelFetch(CLIMATE_VALS_VAR, (prism.idxVtx[0]-1) * TOTAL_LAYERS + layerId).r; //CLIMATE_VALS_VAR[idxVtx[0] * TOTAL_LAYERS + (m_iLayer + iFace)];
@@ -441,7 +440,7 @@ void ComputeVerticesNormalTop(in MPASPrism prism, inout dvec3 vtxNormals[3]) {
 			double A[12];
 			GetAs0(curPrismHitted, A);
 			dvec3 fTB[2];
-			GetScalarValue(curPrismHitted, fTB);
+			GetScalarValue(curPrismHitted, temperature, fTB);
 			double OP1, OP4, B[8];
 			GetBs(curPrismHitted, A, fTB, B, OP1, OP4);
 			avgNormal += GetNormal(curPrismHitted.vtxCoordTop[i], A, B, OP1, OP4);
@@ -452,7 +451,7 @@ void ComputeVerticesNormalTop(in MPASPrism prism, inout dvec3 vtxNormals[3]) {
 				double A[12];
 				GetAs0(curPrismHitted1, A);
 				dvec3 fTB[2];
-				GetScalarValue(curPrismHitted1, fTB);
+				GetScalarValue(curPrismHitted1, temperature, fTB);
 				double OP1, OP4, B[8];
 				GetBs(curPrismHitted1, A, fTB, B, OP1, OP4);
 				avgNormal += GetNormal(curPrismHitted1.vtxCoordBottom[i], A, B, OP1, OP4);
@@ -485,7 +484,7 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout dvec3 vtxNormals[3]) 
 			double A[12];
 			GetAs0(curPrismHitted, A);
 			dvec3 fTB[2];
-			GetScalarValue(curPrismHitted, fTB);
+			GetScalarValue(curPrismHitted, temperature, fTB);
 			double OP1, OP4, B[8];
 			GetBs(curPrismHitted, A, fTB, B, OP1, OP4);
 			avgNormal += GetNormal(curPrismHitted.vtxCoordBottom[i], A, B, OP1, OP4);
@@ -500,7 +499,7 @@ void ComputeVerticesNormalBottom(in MPASPrism prism, inout dvec3 vtxNormals[3]) 
 				double A[12];
 				GetAs0(curPrismHitted1, A);
 				dvec3 fTB[2];
-				GetScalarValue(curPrismHitted1, fTB);
+				GetScalarValue(curPrismHitted1, temperature, fTB);
 				double OP1, OP4, B[8];
 				GetBs(curPrismHitted1, A, fTB, B, OP1, OP4);
 				avgNormal += GetNormal(curPrismHitted1.vtxCoordTop[i], A, B, OP1, OP4);
@@ -554,8 +553,6 @@ void main(){
 		tOutHitRecord = (tOutHitRecord.t < tmpOutRec.t) ? tmpOutRec : tOutHitRecord;
 	}	
 
-	gPosition = vec3(abs(ray.o + tInHitRecord.t * ray.d - g2f.o_pos));
-
 	dvec3 position = vec3(GLOBAL_RADIUS + GLOBAL_RADIUS);
 	bool hasIsosurface = false;
 	//if (g2f.hitFaceid == tInHitRecord.hitFaceid)
@@ -569,7 +566,7 @@ void main(){
 			double A[12];
 			GetAs0(curPrismHitted, A);
 			dvec3 fTB[2];
-			GetScalarValue(curPrismHitted, fTB);
+			GetScalarValue(curPrismHitted, temperature, fTB);
 			double OP1, OP4;
             double B[8];
             GetBs(curPrismHitted, A, fTB, B, OP1, OP4);
@@ -588,7 +585,9 @@ void main(){
 			double scalar = GetInterpolateValue2(curPrismHitted, u, v, position, fTB[0], fTB[1]);
 			// out_Color = vec4(vec3(abs(scalar_last - scalar) * 1000.0) , 1.0);
 			
-			if ((scalar_last - double(threshold)) * (scalar - double(threshold)) < 0) {
+			if ((scalar_last - double(threshold)) * (scalar - double(threshold)) < 0) 
+			//if (scalar_last - double(threshold) > 0 && scalar - double(threshold) < 0)
+			{
 				// compute normal on the six vertices of current prism
 				dvec3 vtxFNormals[3];
 				ComputeVerticesNormalTop(curPrismHitted, vtxFNormals);

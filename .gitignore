@@ -13,3 +13,4 @@ _deps
 *.nc
 *.h5
 *.png
+*.sh

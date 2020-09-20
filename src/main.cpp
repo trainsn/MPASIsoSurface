@@ -31,11 +31,11 @@ void renderQuad();
 
 const bool dump_buffer = true;
 float isoValue = 20.0f;
-const int nSample = 10;
+const int nSample = 1;
 
 // settings
-const unsigned int SCR_WIDTH = 256;
-const unsigned int SCR_HEIGHT = 256;
+const unsigned int SCR_WIDTH = 1024;
+const unsigned int SCR_HEIGHT = 1024;
 
 size_t nCells, nEdges, nVertices, nVertLevels, maxEdges, vertexDegree, Time;
 vector<double> latVertex, lonVertex, xVertex, yVertex, zVertex;
@@ -552,16 +552,16 @@ int main(int argc, char **argv)
     //save filename 
     char h5NamesFilename[1024];
 	if (train)
-	    sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/h5Names.txt", simIdx);
+	    sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/h5Names.txt", simIdx);
 	else 
-		sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/h5Names.txt", simIdx);
+		sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/h5Names.txt", simIdx);
 	h5Names = fopen(h5NamesFilename, "w");
 
     char imageNamesFilename[1024];
 	if (train)
-	    sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/imageNames.txt", simIdx);
+	    sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/imageNames.txt", simIdx);
 	else 
-		sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/imageNames.txt", simIdx);
+		sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/imageNames.txt", simIdx);
 	imageNames = fopen(imageNamesFilename, "w");
 	
 	// glfw: initialize and configure
@@ -632,7 +632,7 @@ int main(int argc, char **argv)
 		time_last = time_now;
 
 		// create the projection matrix 
-		float near = 1.79f;
+	    float near = 1.79f;
 		float far = 2.81f;
 		float fov_r = 30.0f / 180.0f * M_PI;
 
@@ -685,27 +685,29 @@ int main(int argc, char **argv)
 		//theta = M_PI / 2;
 		//phi = M_PI / 2;
 		if (!(i % 2)){
-		    theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
-    		phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
-    		//theta = M_PI / 2;
-    		//phi = M_PI / 2;
+		    //theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
+    		//phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+    		theta = 132.0f / 180.0f * M_PI;
+    		phi = 314.0f / 180.0f * M_PI;
     		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
     		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-    		isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
-    		//isoValue = 20.0f;
+    		//isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
+    		isoValue = 20.0f;
 		}
 		else {
 		    float up_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
         	glm::vec4 up_adjust_axis = glm::vec4(up, 1.0f) * glm::rotate(up_adjust_angle, direction);
-        	float direction_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI * 2 / 9;
+        	float direction_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI / 6;
         	glm::vec4 direction_new = glm::vec4(direction, 1.0f) * glm::rotate(direction_adjust_angle, up_adjust_axis.xyz());
         	direction = direction_new.xyz();
-        	theta = acos(direction.z / dist);
-	        phi = atan(direction.y / direction.x);
+        	theta = acos(direction_new.z / dist);
+	        phi = atan(direction_new.y / direction_new.x);
 	        if (phi < 0)
 	            phi += M_PI;
 	        if (direction.y < 0)
 	            phi += M_PI;
+	        up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
+	        //printf("%f %f %f\n", up.x - up_adjust_axis.x, up.y - up_adjust_axis.y, up.z - up_adjust_axis.z);
 		}
 		
         center = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -781,7 +783,7 @@ int main(int argc, char **argv)
 		glActiveTexture(GL_TEXTURE9);
 		glBindTexture(GL_TEXTURE_BUFFER, temperatureTex);
 		glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, temperatureBuf);
-		shader.setInt("cellVal", 9);
+		shader.setInt("temperature", 9);
 		
 		shader.setFloat("GLOBAL_RADIUS", 0.5f);
 		shader.setFloat("THICKNESS", 0.5f * layerThickness / max_rho);
@@ -826,9 +828,9 @@ int main(int argc, char **argv)
 		if (dump_buffer) {
 			char filepath[1024];
 			if (train)
-			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/%s", simIdx, filename);
+			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/%s", simIdx, filename);
 			else 
-			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/%s", simIdx, filename);
+			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/%s", simIdx, filename);
 			fprintf(h5Names, "%04d/%s\n", simIdx, filename);
 			    
 			hid_t file, space3, space1, dset_position, dset_normal, dset_mask, dset_depth;
@@ -960,9 +962,9 @@ int main(int argc, char **argv)
 		strcat(imagename, ".png");
 		char imagepath[1024];
 		if (train)
-		    sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train/%04d/%s", simIdx, imagename);
+		    sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/%s", simIdx, imagename);
 		else 
-			sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test/%04d/%s", simIdx, imagename);
+			sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/%s", simIdx, imagename);
 		
 		float* pBuffer = new float[SCR_WIDTH * SCR_HEIGHT * 4];
 		unsigned char* pImage = new unsigned char[SCR_WIDTH * SCR_HEIGHT * 3];

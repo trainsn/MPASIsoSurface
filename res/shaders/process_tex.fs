@@ -35,6 +35,14 @@ void main(){
     gMaskPost = texture(gMask, TexCoords).r;
     gDepthPost = texture(gDepth, TexCoords).r;
     
+    if (isnan(gNormalPost.r)){
+        gPositionPost = vec3(0.0f);
+        gNormalPost = vec3(0.0f);
+        gDiffuseColorPost = vec4(0.0f);
+        gMaskPost = 0.0f;
+        gDepthPost = 0.0f;
+    }
+    
     if (gMaskPost < eps){
         int near_valid = 0;
 		for (int i = 0; i < 8; i++){
@@ -82,13 +90,4 @@ void main(){
 		    gNormalPost = normalize(gNormalPost);
 		}
     }
-    
-    if (isnan(gNormalPost.r)){
-        gPositionPost = vec3(0.0f);
-        gNormalPost = vec3(0.0f);
-        gDiffuseColorPost = vec4(0.0f);
-        gMaskPost = 0.0f;
-        gDepthPost = 0.0f;
-    }
-    
 }

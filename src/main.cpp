@@ -849,7 +849,7 @@ int main(int argc, char **argv)
 			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/%s", simIdx, filename);
 			fprintf(h5Names, "%04d/%s\n", simIdx, filename);
 			    
-			hid_t file, space3, space1, dset_position, dset_normal, dset_mask, dset_depth;
+			hid_t file, space3, space1, dset_position, dset_normal, dset_mask, dset_depth, dset_salinity;
 			herr_t status;
 			hsize_t dims3[1] = { SCR_WIDTH * SCR_HEIGHT * 3 };
 			hsize_t dims1[1] = { SCR_WIDTH * SCR_HEIGHT };
@@ -864,6 +864,7 @@ int main(int argc, char **argv)
 			// Create the dataset. We will use all default properties for this
 			dset_position = H5Dcreate(file, "position", H5T_NATIVE_FLOAT, space3, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 			dset_normal = H5Dcreate(file, "normal", H5T_NATIVE_FLOAT, space3, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+			dset_salinity = H5Dcreate(file, "salinity", H5T_NATIVE_FLOAT, space1, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 			dset_depth = H5Dcreate(file, "depth", H5T_NATIVE_FLOAT, space1, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 			dset_mask = H5Dcreate(file, "mask", H5T_NATIVE_FLOAT, space1, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
@@ -877,6 +878,11 @@ int main(int argc, char **argv)
 			glReadBuffer(GL_COLOR_ATTACHMENT1);
 			glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, nBuffer);
 			status = H5Dwrite(dset_normal, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, nBuffer);
+			
+			float* sBuffer = new float[SCR_WIDTH * SCR_HEIGHT];
+			glReadBuffer(GL_COLOR_ATTACHMENT2);
+			glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RED, GL_FLOAT, sBuffer);
+			status = H5Dwrite(dset_salinity, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, sBuffer);
 
 			float* dBuffer = new float[SCR_WIDTH * SCR_HEIGHT];
 			glReadBuffer(GL_COLOR_ATTACHMENT4);
@@ -890,11 +896,13 @@ int main(int argc, char **argv)
 
 			delete pBuffer;
 			delete nBuffer;
+			delete sBuffer;
 			delete dBuffer;
 			delete mBuffer;
 
 			status = H5Dclose(dset_position);
 			status = H5Dclose(dset_normal);
+			status = H5Dclose(dset_salinity);
 			status = H5Dclose(dset_depth);
 			status = H5Dclose(dset_mask);
 			status = H5Sclose(space1);

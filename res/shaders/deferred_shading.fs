@@ -50,7 +50,8 @@ void main()
 	float depth = texture(gDepth, TexCoords).r;
 	vec3 vPosition = ViewPosFromDepth(depth);
 	vec3 vTransformedNormal = texture(gNormal, TexCoords).rgb;
-	vec4 vDiffuseColor = vec4(vec3(texture(gSalinity, TexCoords).r), 1.0);
+	vec4 vDiffuseColor = vec4(vec3((texture(gSalinity, TexCoords).r - 34.0) / 2.0), 1.0);
+	//vec4 vDiffuseColor = vec4(1.0);
 
 	// calculate lighting as usual 
 	vec3 ambient = vDiffuseColor.rgb * uAmbientColor;

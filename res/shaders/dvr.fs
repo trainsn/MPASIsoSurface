@@ -594,6 +594,10 @@ void main(){
 				ComputeVerticesNormalTop(curPrismHitted, vtxFNormals);
 				dvec3 vtxBNormals[3];
 				ComputeVerticesNormalBottom(curPrismHitted, vtxBNormals);
+				
+				// retrive salinity on the six vertices of current prism
+				dvec3 sTB[2];
+			    GetScalarValue(curPrismHitted, salinity, sTB);
 
 				double offset = (scalar - double(threshold)) / (scalar - scalar_last);
 				t = tOutHitRecord.t - offset * (tOutHitRecord.t - tInHitRecord.t);
@@ -606,7 +610,8 @@ void main(){
 				if ((scalar_last - threshold) < 0)
 					gNormal = -gNormal;
 				//gNormal = vec3(vtxFNormals[0]);
-				gSalinity = 1.0;
+				
+				gSalinity = float(GetInterpolateValue2(curPrismHitted, u, v, position, sTB[0], sTB[1]));
 				gMask = 1.0;
 				vec4 posProjSpace = uPMatrix * uMVMatrix * vec4(position, 1.0);
 				gDepth = posProjSpace.z /posProjSpace.w;

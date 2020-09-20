@@ -2,7 +2,7 @@
 
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gDiffuseColor;
+layout (location = 2) out float gSalinity;
 layout (location = 3) out float gMask;
 layout (location = 4) out float gDepth;
 
@@ -606,7 +606,7 @@ void main(){
 				if ((scalar_last - threshold) < 0)
 					gNormal = -gNormal;
 				//gNormal = vec3(vtxFNormals[0]);
-				gDiffuseColor = vec4(1.0, 1.0, 1.0, 1.0);
+				gSalinity = 1.0;
 				gMask = 1.0;
 				vec4 posProjSpace = uPMatrix * uMVMatrix * vec4(position, 1.0);
 				gDepth = posProjSpace.z /posProjSpace.w;

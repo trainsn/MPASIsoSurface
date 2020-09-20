@@ -3,13 +3,13 @@ in vec2 TexCoords;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
-uniform sampler2D gDiffuseColor;
+uniform sampler2D gSalinity;
 uniform sampler2D gMask;
 uniform sampler2D gDepth;
 
 layout (location = 0) out vec3 gPositionPost;
 layout (location = 1) out vec3 gNormalPost;
-layout (location = 2) out vec4 gDiffuseColorPost;
+layout (location = 2) out float gSalinityPost;
 layout (location = 3) out float gMaskPost;
 layout (location = 4) out float gDepthPost;
 
@@ -31,14 +31,14 @@ const float maxGap = 0.1;
 void main(){
     gPositionPost = texture(gPosition, TexCoords).rgb;
     gNormalPost = texture(gNormal, TexCoords).rgb;
-    gDiffuseColorPost = texture(gDiffuseColor, TexCoords).rgba;
+    gSalinityPost = texture(gSalinity, TexCoords).r;
     gMaskPost = texture(gMask, TexCoords).r;
     gDepthPost = texture(gDepth, TexCoords).r;
     
     if (isnan(gNormalPost.r)){
         gPositionPost = vec3(0.0f);
         gNormalPost = vec3(0.0f);
-        gDiffuseColorPost = vec4(0.0f);
+        gSalinityPost = 0.0f;
         gMaskPost = 0.0f;
         gDepthPost = 0.0f;
     }
@@ -57,7 +57,7 @@ void main(){
 				    gDepthPost += texture(gDepth, TexCoords + offsets[i]).r / near_valid;
 				    gPositionPost += texture(gPosition, TexCoords + offsets[i]).rgb / near_valid;
 				    gNormalPost += texture(gNormal, TexCoords + offsets[i]).rgb;
-				    gDiffuseColorPost += texture(gDiffuseColor, TexCoords).rgba / near_valid; 
+				    gSalinityPost += texture(gSalinity, TexCoords + offsets[i]).r / near_valid; 
 				}
 			}
 			gNormalPost = normalize(gNormalPost);
@@ -76,7 +76,7 @@ void main(){
 		    gDepthPost = 0.0;
 		    gPositionPost = vec3(0.0);
 		    gNormalPost = vec3(0.0);
-		    gDiffuseColorPost = vec4(0.0);
+		    gSalinityPost = 0.0;
 		    for (int i = 0; i < 8; i++){
 		        if (texture(gMask, TexCoords + offsets[i]).r > 1 - eps && 
 		        texture(gDepth, TexCoords).r - texture(gDepth, TexCoords + offsets[i]).r > maxGap && 
@@ -84,7 +84,7 @@ void main(){
 		            gDepthPost += texture(gDepth, TexCoords + offsets[i]).r / near_valid;
 				    gPositionPost += texture(gPosition, TexCoords + offsets[i]).rgb / near_valid;
 				    gNormalPost += texture(gNormal, TexCoords + offsets[i]).rgb;
-				    gDiffuseColorPost += texture(gDiffuseColor, TexCoords).rgba / near_valid; 
+				    gSalinityPost += texture(gSalinity, TexCoords + offsets[i]).r / near_valid; 
 		        }
 		    }
 		    gNormalPost = normalize(gNormalPost);

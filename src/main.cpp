@@ -414,7 +414,7 @@ void setMatrixUniforms(Shader ourShader) {
 }
 
 unsigned int gBuffer;
-unsigned int gPosition, gNormal, gDiffuseColor, gMask, gDepth;
+unsigned int gPosition, gNormal, gSalinity, gMask, gDepth;
 void setUpgBuffer(){
     	// set up G-buffer 
 	// 5 textures
@@ -440,13 +440,13 @@ void setUpgBuffer(){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-	// diffuseColor color buffer 
-	glGenTextures(1, &gDiffuseColor);
-	glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    // salinity color buffer 
+	glGenTextures(1, &gSalinity);
+	glBindTexture(GL_TEXTURE_2D, gSalinity);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gDiffuseColor, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gSalinity, 0);
 	// mask color buffer
 	glGenTextures(1, &gMask);
 	glBindTexture(GL_TEXTURE_2D, gMask);
@@ -481,13 +481,13 @@ void setUpgBuffer(){
 }
 
 unsigned int gBufferPost;
-unsigned int gPositionPost, gNormalPost, gDiffuseColorPost, gMaskPost, gDepthPost;
+unsigned int gPositionPost, gNormalPost, gSalinityPost, gMaskPost, gDepthPost;
 void setUpgBufferPost(){
     // set up G-buffer Post
 	// 5 textures
 	// 1. PositionPost (RGB)
-	// 2. ColorPost(RGBA)
-	// 3. NormalsPost 
+	// 2. NormalsPost 
+	// 3. Salinity
 	// 4. MasksPost
 	// 5. DepthPost
 	glGenFramebuffers(1, &gBufferPost);
@@ -508,12 +508,12 @@ void setUpgBufferPost(){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormalPost, 0);
 	// diffuseColor color buffer 
-	glGenTextures(1, &gDiffuseColorPost);
-	glBindTexture(GL_TEXTURE_2D, gDiffuseColorPost);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+	glGenTextures(1, &gSalinityPost);
+	glBindTexture(GL_TEXTURE_2D, gSalinityPost);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gDiffuseColorPost, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gSalinityPost, 0);
 	// mask color buffer
 	glGenTextures(1, &gMaskPost);
 	glBindTexture(GL_TEXTURE_2D, gMaskPost);
@@ -820,7 +820,7 @@ int main(int argc, char **argv)
         shaderPost.use();
         shaderPost.setInt("gPosition", 0);
 		shaderPost.setInt("gNormal", 1);
-		shaderPost.setInt("gDiffuseColor", 2);
+		shaderPost.setInt("gSalinity", 2);
 		shaderPost.setInt("gMask", 3);
 		shaderPost.setInt("gDepth", 4);
 		
@@ -829,7 +829,7 @@ int main(int argc, char **argv)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, gNormal);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, gDiffuseColor);
+		glBindTexture(GL_TEXTURE_2D, gSalinity);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, gMask);
 		glActiveTexture(GL_TEXTURE4);
@@ -910,7 +910,7 @@ int main(int argc, char **argv)
 		shaderLightingPass.use();
 		shaderLightingPass.setInt("gPosition", 0);
 		shaderLightingPass.setInt("gNormal", 1);
-		shaderLightingPass.setInt("gDiffuseColor", 2);
+		shaderLightingPass.setInt("gSalinity", 2);
 		shaderLightingPass.setInt("gMask", 3);
 		shaderLightingPass.setInt("gDepth", 4);
 
@@ -919,7 +919,7 @@ int main(int argc, char **argv)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, gNormalPost);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, gDiffuseColorPost);
+		glBindTexture(GL_TEXTURE_2D, gSalinityPost);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, gMaskPost);
 		glActiveTexture(GL_TEXTURE4);

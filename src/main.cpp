@@ -44,7 +44,7 @@ vector<int> indexToVertexID, indexToCellID, indexToEdgeID;
 vector<int> verticesOnEdge, cellsOnEdge, 
 			cellsOnVertex, edgesOnVertex, 
 			verticesOnCell, nEdgesOnCell, maxLevelCell; 
-vector<double> temperature;
+vector<double> temperature, salinity;
 
 map<int, int> vertexIndex, cellIndex;
 
@@ -115,6 +115,7 @@ unsigned int cellsOnEdgeBuf, cellsOnEdgeTex;
 unsigned int verticesOnEdgeBuf, verticesOnEdgeTex;
 unsigned int maxLevelCellBuf, maxLevelCellTex;
 unsigned int temperatureBuf, temperatureTex;
+unsigned int salinityBuf, salinityTex;
 
 void loadMeshFromNetCDF(const string& filename) {
 	int ncid;
@@ -126,7 +127,7 @@ void loadMeshFromNetCDF(const string& filename) {
 		varid_indexToVertexID, varid_indexToCellID, varid_indexToEdgeID,
 		varid_nEdgesOnCell, varid_cellsOncell, varid_verticesOnCell, varid_maxLevelCell,
 		varid_verticesOnEdge, varid_cellsOnEdge,
-		varid_temperature;
+		varid_temperature, varid_salinity;
 
 	NC_SAFE_CALL(nc_open(filename.c_str(), NC_NOWRITE, &ncid));
 
@@ -168,6 +169,7 @@ void loadMeshFromNetCDF(const string& filename) {
 	NC_SAFE_CALL(nc_inq_varid(ncid, "verticesOnEdge", &varid_verticesOnEdge));
 	NC_SAFE_CALL(nc_inq_varid(ncid, "cellsOnEdge", &varid_cellsOnEdge));
 	NC_SAFE_CALL(nc_inq_varid(ncid, "temperature", &varid_temperature)); 
+	NC_SAFE_CALL(nc_inq_varid(ncid, "salinity", &varid_salinity));
 
 	const size_t start_cells[1] = { 0 }, size_cells[1] = { nCells };
 
@@ -263,8 +265,10 @@ void loadMeshFromNetCDF(const string& filename) {
 
 	const size_t start_time_cell_vertLevel[3] = { 0, 0, 0 }, size_time_cell_vertLevel[3] = { Time, nCells, nVertLevels };
 	temperature.resize(Time * nCells * nVertLevels);
+	salinity.resize(Time * nCells * nVertLevels);
 
 	NC_SAFE_CALL(nc_get_vara_double(ncid, varid_temperature, start_time_cell_vertLevel, size_time_cell_vertLevel, &temperature[0]));
+	NC_SAFE_CALL(nc_get_vara_double(ncid, varid_salinity, start_time_cell_vertLevel, size_time_cell_vertLevel, &salinity[0]));
 
 	NC_SAFE_CALL(nc_close(ncid));
 
@@ -382,6 +386,13 @@ void initTextures() {
 	vector<float> temperatureFloat(temperature.begin(), temperature.end());
 	glBufferData(GL_TEXTURE_BUFFER, Time * nCells * nVertLevels * sizeof(float), &temperatureFloat[0], GL_STATIC_DRAW);
 	glGenTextures(1, &temperatureTex);
+	
+	// salinity 
+	glGenBuffers(1, &salinityBuf);
+	glBindBuffer(GL_TEXTURE_BUFFER, salinityBuf);
+	vector<float> salinityFloat(salinity.begin(), salinity.end());
+	glBufferData(GL_TEXTURE_BUFFER, Time * nCells * nVertLevels * sizeof(float), &salinityFloat[0], GL_STATIC_DRAW);
+	glGenTextures(1, &salinityTex);
 }
 
 void setMatrixUniforms(Shader ourShader) {
@@ -784,6 +795,11 @@ int main(int argc, char **argv)
 		glBindTexture(GL_TEXTURE_BUFFER, temperatureTex);
 		glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, temperatureBuf);
 		shader.setInt("temperature", 9);
+		
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_BUFFER, salinityTex);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, salinityBuf);
+		shader.setInt("salinity", 10);
 		
 		shader.setFloat("GLOBAL_RADIUS", 0.5f);
 		shader.setFloat("THICKNESS", 0.5f * layerThickness / max_rho);

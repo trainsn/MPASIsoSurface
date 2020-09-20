@@ -34,6 +34,7 @@ uniform isamplerBuffer verticesOnCell;
 uniform isamplerBuffer nEdgesOnCell;
 uniform isamplerBuffer maxLevelCell;
 uniform samplerBuffer temperature;
+uniform samplerBuffer salinity;
 //symbolic definition of dual triangle mesh
 #define TRIANGLE_TO_EDGES_VAR edgesOnVertex
 #define EDGE_CORNERS_VAR cellsOnEdge

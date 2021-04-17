@@ -29,13 +29,65 @@ using namespace std;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void renderQuad();
 
-const bool dump_buffer = true;
-float isoValue = 20.0f;
-const int nSample = 1;
+const bool dump_buffer = false;
+const int nSample = 50;
+float isoValue;
+const float view_params[nSample * 3] = {
+20.314484,187.908897,171.774259,
+22.705146,353.781572,128.653411,
+21.823998,75.905606,75.036965,
+19.282300,293.549511,50.002891,
+16.090334,133.269339,123.457286,
+15.315076,103.901258,9.258459,
+15.245793,117.139243,43.174920,
+23.406247,108.092297,0.440163,
+22.155665,323.578984,12.691946,
+16.941582,128.449090,69.940793,
+17.346898,269.210309,11.212497,
+23.474697,223.899455,6.632119,
+22.838593,283.194386,114.214793,
+19.875788,174.193752,48.220350,
+21.449050,15.732136,94.229160,
+18.716461,185.697975,122.360962,
+22.719250,27.991906,56.133349,
+18.471506,356.730204,31.184229,
+16.325181,308.757227,73.947490,
+21.390395,345.603730,141.117501,
+23.298309,234.760645,156.420186,
+23.650707,331.293966,150.831893,
+20.779962,178.143805,149.994288,
+24.376396,184.379013,83.329037,
+20.083013,57.991362,29.889161,
+22.448610,307.089471,105.756724,
+19.237054,145.588793,40.063822,
+16.410821,315.447263,25.732794,
+21.235742,63.850396,82.833046,
+23.021740,167.563972,38.540286,
+17.658054,87.398911,129.835562,
+16.865753,36.670710,124.564688,
+16.500053,59.641168,174.642346,
+15.370439,297.939758,110.793316,
+17.465472,32.291522,12.482814,
+24.350887,82.395558,172.405820,
+21.936678,19.688731,50.690288,
+18.120732,157.173595,96.707968,
+15.964961,94.343080,80.454207,
+23.322053,44.478843,58.497118,
+18.023226,357.442690,106.699932,
+20.564321,105.166395,155.868415,
+20.185707,40.218361,76.216746,
+19.659452,207.369895,91.693415,
+15.296466,239.860163,49.150644,
+16.223836,117.075535,90.694643,
+23.770049,300.490202,116.574573,
+18.522119,60.556431,96.261180,
+15.141651,332.397868,117.298147,
+24.260451,310.795274,34.725567
+};
 
 // settings
-const unsigned int SCR_WIDTH = 1024;
-const unsigned int SCR_HEIGHT = 1024;
+const unsigned int SCR_WIDTH = 512;
+const unsigned int SCR_HEIGHT = 512;
 
 size_t nCells, nEdges, nVertices, nVertLevels, maxEdges, vertexDegree, Time;
 vector<double> latVertex, lonVertex, xVertex, yVertex, zVertex;
@@ -545,35 +597,33 @@ int main(int argc, char **argv)
 	char input_name[1024];
 	sprintf(input_name, argv[1]);
 	fprintf(stderr, "%s\n", argv[1]);
-	bool train = (bool)(argv[2][0] - '0');
     
 	string input_name_s = input_name;
 	int pos_last_dot = input_name_s.rfind(".");
 	int pos_last_dash = input_name_s.rfind("_");
 	int simIdx = stoi(input_name_s.substr(0, pos_last_dash));
-	float BwsA = stof(input_name_s.substr(pos_last_dash + 1, pos_last_dot - pos_last_dash - 1));
 
 	char input_path[1024];
-	sprintf(input_path, "/fs/project/PAS0027/MPAS/Results/%s", input_name);
+	sprintf(input_path, "/fs/project/PAS0027/MPAS1/Results/%s", input_name);
  	loadMeshFromNetCDF(input_path);
 	
-	FILE *h5Names = NULL;
-	FILE *imageNames = NULL;
+// 	FILE *h5Names = NULL;
+// 	FILE *imageNames = NULL;
 
-    //save filename 
-    char h5NamesFilename[1024];
-	if (train)
-	    sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/h5Names.txt", simIdx);
-	else 
-		sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/h5Names.txt", simIdx);
-	h5Names = fopen(h5NamesFilename, "w");
+//     //save filename 
+//     char h5NamesFilename[1024];
+// 	if (train)
+// 	    sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/h5Names.txt", simIdx);
+// 	else 
+// 		sprintf(h5NamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/h5Names.txt", simIdx);
+// 	h5Names = fopen(h5NamesFilename, "w");
 
-    char imageNamesFilename[1024];
-	if (train)
-	    sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/imageNames.txt", simIdx);
-	else 
-		sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/imageNames.txt", simIdx);
-	imageNames = fopen(imageNamesFilename, "w");
+//     char imageNamesFilename[1024];
+// 	if (train)
+// 	    sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/imageNames.txt", simIdx);
+// 	else 
+// 		sprintf(imageNamesFilename, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/imageNames.txt", simIdx);
+// 	imageNames = fopen(imageNamesFilename, "w");
 	
 	// glfw: initialize and configure
 	// ------------------------------
@@ -693,33 +743,16 @@ int main(int argc, char **argv)
 		mvMatrix = glm::mat4(1.0f);
 
 		// transform
-		//theta = M_PI / 2;
-		//phi = M_PI / 2;
-		if (!(i % 2)){
-		    //theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
-    		//phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
-    		theta = 132.0f / 180.0f * M_PI;
-    		phi = 314.0f / 180.0f * M_PI;
-    		direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
-    		up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-    		//isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
-    		isoValue = 20.0f;
-		}
-		else {
-		    float up_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
-        	glm::vec4 up_adjust_axis = glm::vec4(up, 1.0f) * glm::rotate(up_adjust_angle, direction);
-        	float direction_adjust_angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI / 6;
-        	glm::vec4 direction_new = glm::vec4(direction, 1.0f) * glm::rotate(direction_adjust_angle, up_adjust_axis.xyz());
-        	direction = direction_new.xyz();
-        	theta = acos(direction_new.z / dist);
-	        phi = atan(direction_new.y / direction_new.x);
-	        if (phi < 0)
-	            phi += M_PI;
-	        if (direction.y < 0)
-	            phi += M_PI;
-	        up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
-	        //printf("%f %f %f\n", up.x - up_adjust_axis.x, up.y - up_adjust_axis.y, up.z - up_adjust_axis.z);
-		}
+		theta = view_params[i * 3 + 2] / 180.0f * M_PI;
+		phi = view_params[i * 3 + 1] / 180.0f * M_PI;
+		//theta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI;
+    	//phi = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 2 * M_PI;
+    	//theta = 132.0f / 180.0f * M_PI;
+    	//phi = 314.0f / 180.0f * M_PI;
+    	direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
+    	up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
+    	//isoValue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * (25.0 - 15.0) + 15.0;
+    	isoValue = view_params[i * 3 + 0];    
 		
         center = glm::vec3(0.0f, 0.0f, 0.0f);
 		eye = center + direction;
@@ -840,14 +873,10 @@ int main(int argc, char **argv)
 
 		// write framebuffer to hdf5 file
 		char filename[1024];
-	    sprintf(filename, "MPAS_%06d_%.5f_%.6f_%.10f_%.10f.h5", simIdx * nSample + i, BwsA, isoValue, theta * 180 / M_PI, phi * 180 / M_PI);
+	    sprintf(filename, "iso%d.h5", i);
 		if (dump_buffer) {
 			char filepath[1024];
-			if (train)
-			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/%s", simIdx, filename);
-			else 
-			    sprintf(filepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/%s", simIdx, filename);
-			fprintf(h5Names, "%04d/%s\n", simIdx, filename);
+			sprintf(filepath, "/fs/project/PAS0027/MPAS1/Results/%04d/%s", simIdx, filename);
 			    
 			hid_t file, space3, space1, dset_position, dset_normal, dset_mask, dset_depth, dset_salinity;
 			herr_t status;
@@ -985,10 +1014,7 @@ int main(int argc, char **argv)
 		strcpy(imagename, filename_s.substr(0, pos_last_dot).c_str());
 		strcat(imagename, ".png");
 		char imagepath[1024];
-		if (train)
-		    sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/train_toy/%04d/%s", simIdx, imagename);
-		else 
-			sprintf(imagepath, "/fs/project/PAS0027/bufferLearning/data/MPAS/test_toy/%04d/%s", simIdx, imagename);
+		sprintf(imagepath, "/fs/project/PAS0027/MPAS1/Results/%04d/%s", simIdx, imagename);
 		
 		float* pBuffer = new float[SCR_WIDTH * SCR_HEIGHT * 4];
 		unsigned char* pImage = new unsigned char[SCR_WIDTH * SCR_HEIGHT * 3];
@@ -1003,7 +1029,7 @@ int main(int argc, char **argv)
 			}
 		}
 		stbi_write_png(imagepath, SCR_WIDTH, SCR_HEIGHT, 3, pImage, SCR_WIDTH * 3);
-		fprintf(imageNames, "%04d/%s\n", simIdx, imagename);
+// 		fprintf(imageNames, "%04d/%s\n", simIdx, imagename);
 
 		delete pBuffer;
 		delete pImage;

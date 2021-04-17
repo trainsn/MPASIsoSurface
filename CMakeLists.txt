@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
-project(MPASVis)
+project(MPASIsosurface)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -40,24 +40,24 @@ message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 add_library(GLAD "thirdparty/glad.c")
 
 # NETCDF
-link_directories(/usr/local/netcdf/intel/16.0/mvapich2/2.2rc1/4.3.3.1/lib)
+link_directories(/usr/local/netcdf/intel/17.0/mvapich2/2.3/4.6.1/lib)
 link_libraries(netcdf)
 
 # HDF5
-link_directories(/usr/local/hdf5/intel/16.0/mvapich2/2.2rc1/1.8.17/lib)
+link_directories(/usr/local/hdf5/intel/17.0/mvapich2/2.3/1.10.2/lib)
 link_libraries(hdf5)
 
 # MPI 
-link_directories(/opt/mvapich2/intel/16.0/2.2/lib)
+link_directories(/opt/mvapich2/intel/17.0/2.3.2/lib)
 link_libraries(mpi)
 
 # Define the include DIRs
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
 	"${CMAKE_SOURCE_DIR}/include"
-	"/usr/local/netcdf/intel/16.0/mvapich2/2.2rc1/4.3.3.1/include"
-	"/usr/local/hdf5/intel/16.0/mvapich2/2.2rc1/1.8.17/include"
-	"/opt/mvapich2/intel/16.0/2.2/include"
+	"/usr/local/netcdf/intel/17.0/mvapich2/2.3/4.6.1/include"
+	"/usr/local/hdf5/intel/17.0/mvapich2/2.3/1.10.2/include"
+	"/opt/mvapich2/intel/17.0/2.3.2/include"
 )
 
 # Define the executable
